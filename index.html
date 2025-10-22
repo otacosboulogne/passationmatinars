@@ -78,7 +78,49 @@
       font-size: 24px;
       margin: 0 0 18px;
     }
+/* ✅ Boutons radios style "soir" (pastilles visuelles) */
+.radio-row {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  margin-bottom: 12px;
+}
 
+.radio-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.radio-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.r-bullet::before {
+  content: '○';
+  display: inline-block;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.radio-option input[type="radio"]:checked + .r-bullet::before {
+  content: '●';
+  font-weight: bold;
+  color: #1565c0;
+}
+
+.r-text {
+  margin-left: 4px;
+}
     .grid{
       display:grid;
       grid-template-columns: repeat(2, 1fr);
