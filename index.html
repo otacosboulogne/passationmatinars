@@ -175,6 +175,10 @@
 <div class="field">
   <label for="nombrePertesConception">Nombre de pertes de conception en cuisine durant ton service</label>
   <input id="nombrePertesConception" name="nombrePertesConception" type="number" inputmode="numeric" min="0" step="1" placeholder="0" required>
+  <div id="detailPertesConception" class="field" style="display:none;">
+  <label for="detailsPertesConception">Détail des pertes de conception</label>
+  <textarea id="detailsPertesConception" name="detailsPertesConception" placeholder="Précisez les produits ou erreurs..."></textarea>
+</div>
 </div>
 
 <div id="detailPertesConception" class="field" style="display:none;">
@@ -184,13 +188,13 @@
 
 <!-- Tableau repas employés -->
 <div id="repas-employes" class="field repas-field" style="flex:1 1 420px;min-width:360px">
-  <label>Repas employés donnés dans le service</label>
+  <label>Repas employés</label>
   <table class="repas-table" aria-label="Repas employés">
     <colgroup>
       <col style="width:50%">
+      <col style="width:15%">
+      <col style="width:15%">
       <col style="width:20%">
-      <col style="width:20%">
-      <col style="width:10%">
     </colgroup>
     <thead>
       <tr>
@@ -203,8 +207,8 @@
     <tbody id="repas-body">
       <tr>
         <td><input type="text" name="employe_nom_1" placeholder="Nom et prénom" aria-label="Nom du salarié 1"></td>
-        <td class="center"><input type="radio" name="employe_1_repas" value="tacos"></td>
-        <td class="center"><input type="radio" name="employe_1_repas" value="finger"></td>
+        <td class="center"><input type="radio" name="employe_1_repas" value="tacos" aria-label="Tacos"></td>
+        <td class="center"><input type="radio" name="employe_1_repas" value="finger" aria-label="Finger Food"></td>
         <td class="center"><button type="button" class="remove-row" style="background:#c62828;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">🗑️</button></td>
       </tr>
     </tbody>
@@ -525,31 +529,11 @@
       }
     });
   </script>
-  <script>
+ <script>
 document.addEventListener("DOMContentLoaded", function() {
-
-  // === GESTION DES PERTES DE CONCEPTION ===
-  const pertesInput = document.getElementById("nombrePertesConception");
-  const detailField = document.getElementById("detailPertesConception");
-  const detailTextarea = document.getElementById("detailsPertesConception");
-
-  pertesInput.addEventListener("input", function() {
-    const value = parseInt(pertesInput.value, 10);
-    if (!isNaN(value) && value > 0) {
-      detailField.style.display = "block";
-      detailTextarea.setAttribute("required", "required");
-    } else {
-      detailField.style.display = "none";
-      detailTextarea.removeAttribute("required");
-      detailTextarea.value = "";
-    }
-  });
-
-  // === GESTION DU TABLEAU DES REPAS EMPLOYÉS ===
   const repasBody = document.getElementById("repas-body");
   const addBtn = document.getElementById("add-repas");
   const repasField = document.getElementById("repas-employes");
-  const form = document.getElementById("passationForm");
   let count = 1;
 
   // ➕ Ajouter une nouvelle ligne
@@ -569,6 +553,7 @@ document.addEventListener("DOMContentLoaded", function() {
   repasBody.addEventListener("click", function(e) {
     if (e.target.classList.contains("remove-row")) {
       const row = e.target.closest("tr");
+      // Empêche de supprimer la dernière ligne restante
       if (repasBody.querySelectorAll("tr").length > 1) {
         row.remove();
       } else {
@@ -577,9 +562,9 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // ✅ Validation avant envoi
+  // 🔍 Validation repas : au moins une ligne avec un repas coché
+  const form = document.getElementById("passationForm");
   form.addEventListener("submit", function(e) {
-    // Vérification du tableau repas
     const rows = repasBody.querySelectorAll("tr");
     let valid = false;
 
@@ -602,6 +587,26 @@ document.addEventListener("DOMContentLoaded", function() {
       repasField.classList.remove("error");
     }
   }, true);
+});
+</script>
+  <script>
+document.addEventListener("DOMContentLoaded", function() {
+  const pertesInput = document.getElementById("nombrePertesConception");
+  const detailField = document.getElementById("detailPertesConception");
+  const detailTextarea = document.getElementById("detailsPertesConception");
+
+  // 🧮 Afficher ou masquer le champ selon la valeur
+  pertesInput.addEventListener("input", function() {
+    const value = parseInt(pertesInput.value, 10);
+    if (!isNaN(value) && value > 0) {
+      detailField.style.display = "block";
+      detailTextarea.setAttribute("required", "required");
+    } else {
+      detailField.style.display = "none";
+      detailTextarea.removeAttribute("required");
+      detailTextarea.value = "";
+    }
+  });
 });
 </script>
 </body>
