@@ -647,20 +647,32 @@ document.addEventListener("DOMContentLoaded", function() {
     return `passation-sent-${d}-${r}`;
   }
 
-  async function makePdfBlob(page){
-    const opt = {
-      margin: [5, 10, 10, 10],
-      pagebreak: { mode: 'avoid', avoid: '.page' },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        scrollY: 0
-      },
-      jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
-    };
-    return await html2pdf().set(opt).from(page).output('blob');
-  }
+ async function makePdfBlob(page){
+  // 🔧 Corrige les couleurs non supportées avant la capture
+  page.querySelectorAll('*').forEach(el=>{
+    const cs = getComputedStyle(el);
+    try {
+      // force les couleurs CSS "simples" en hexa
+      const color = cs.color;
+      const bg = cs.backgroundColor;
+      if (color && color.startsWith('color(')) el.style.color = '#111';
+      if (bg && bg.startsWith('color(')) el.style.backgroundColor = '#fff';
+    } catch(e){}
+  });
 
+  const opt = {
+    margin: [5, 10, 10, 10],
+    pagebreak: { mode: 'avoid', avoid: '.page' },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      scrollY: 0
+    },
+    jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
+  };
+  return await html2pdf().set(opt).from(page).output('blob');
+}
+  
   let formAlreadySent = false;
 
   const form = document.getElementById('passationForm');
