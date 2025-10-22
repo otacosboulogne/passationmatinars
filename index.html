@@ -550,7 +550,7 @@
       for (const [k,v] of data.entries()) payload[k] = v;
 
       try{
-        const res = await fetch('https://script.google.com/macros/s/AKfycbwV6DAltJCzMh3o5Q5dUlyrnq539Al0OrdkJg8-5ZvCn2qUKD2o_2AD69zsX_NaVEyF/exec',{
+        const res = await fetch('https://script.google.com/macros/s/AKfycbxkFOpIDx_TItBTZUpt5XE9_IG7qxvwRALProUjo1-w6SG6rsiMES_uy1RW7LzhC8Xk/exec',{
           method:'POST',
           headers:{'Content-Type':'application/json'},
           body: JSON.stringify(payload)
