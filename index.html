@@ -171,14 +171,49 @@
         <div class="block">
           <h2>Informations importantes</h2>
           <div class="flex">
-            <div class="field">
-              <label for="nombrePertesConception">Nombre de pertes de conception en cuisine durant ton service</label>
-              <input id="nombrePertesConception" name="nombrePertesConception" type="number" inputmode="numeric" min="0" step="1" placeholder="0" />
-            </div>
-            <div class="field">
-              <label for="nombreRepasEmployes">Nombre de repas employés donnés dans le service</label>
-              <input id="nombreRepasEmployes" name="nombreRepasEmployes" type="number" inputmode="numeric" min="0" step="1" placeholder="0" />
-            </div>
+            <!-- Nombre de pertes + champ détaillé -->
+<div class="field">
+  <label for="nombrePertesConception">Nombre de pertes de conception en cuisine durant ton service</label>
+  <input id="nombrePertesConception" name="nombrePertesConception" type="number" inputmode="numeric" min="0" step="1" placeholder="0" required>
+</div>
+
+<div id="detailPertesConception" class="field" style="display:none;">
+  <label for="detailsPertesConception">Détail des pertes de conception</label>
+  <textarea id="detailsPertesConception" name="detailsPertesConception" placeholder="Précisez les produits ou erreurs..."></textarea>
+</div>
+
+<!-- Tableau repas employés -->
+<div id="repas-employes" class="field repas-field" style="flex:1 1 420px;min-width:360px">
+  <label>Repas employés donnés dans le service</label>
+  <table class="repas-table" aria-label="Repas employés">
+    <colgroup>
+      <col style="width:50%">
+      <col style="width:20%">
+      <col style="width:20%">
+      <col style="width:10%">
+    </colgroup>
+    <thead>
+      <tr>
+        <th>Nom du salarié</th>
+        <th>Tacos</th>
+        <th>Finger Food</th>
+        <th>Supprimer</th>
+      </tr>
+    </thead>
+    <tbody id="repas-body">
+      <tr>
+        <td><input type="text" name="employe_nom_1" placeholder="Nom et prénom" aria-label="Nom du salarié 1"></td>
+        <td class="center"><input type="radio" name="employe_1_repas" value="tacos"></td>
+        <td class="center"><input type="radio" name="employe_1_repas" value="finger"></td>
+        <td class="center"><button type="button" class="remove-row" style="background:#c62828;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">🗑️</button></td>
+      </tr>
+    </tbody>
+  </table>
+  <button type="button" id="add-repas" style="margin-top:8px;background:#1565c0;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;">
+    + Ajouter un repas
+  </button>
+  <p class="form-error" aria-live="polite"></p>
+</div>
             <div class="field" style="flex:1 1 280px">
               <label>La commande sur Inpulse a été validée</label>
               <div class="radio-row" role="radiogroup" aria-label="Commande validée">
@@ -490,5 +525,84 @@
       }
     });
   </script>
+  <script>
+document.addEventListener("DOMContentLoaded", function() {
+
+  // === GESTION DES PERTES DE CONCEPTION ===
+  const pertesInput = document.getElementById("nombrePertesConception");
+  const detailField = document.getElementById("detailPertesConception");
+  const detailTextarea = document.getElementById("detailsPertesConception");
+
+  pertesInput.addEventListener("input", function() {
+    const value = parseInt(pertesInput.value, 10);
+    if (!isNaN(value) && value > 0) {
+      detailField.style.display = "block";
+      detailTextarea.setAttribute("required", "required");
+    } else {
+      detailField.style.display = "none";
+      detailTextarea.removeAttribute("required");
+      detailTextarea.value = "";
+    }
+  });
+
+  // === GESTION DU TABLEAU DES REPAS EMPLOYÉS ===
+  const repasBody = document.getElementById("repas-body");
+  const addBtn = document.getElementById("add-repas");
+  const repasField = document.getElementById("repas-employes");
+  const form = document.getElementById("passationForm");
+  let count = 1;
+
+  // ➕ Ajouter une nouvelle ligne
+  addBtn.addEventListener("click", function() {
+    count++;
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td><input type="text" name="employe_nom_${count}" placeholder="Nom et prénom" aria-label="Nom du salarié ${count}"></td>
+      <td class="center"><input type="radio" name="employe_${count}_repas" value="tacos"></td>
+      <td class="center"><input type="radio" name="employe_${count}_repas" value="finger"></td>
+      <td class="center"><button type="button" class="remove-row" style="background:#c62828;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">🗑️</button></td>
+    `;
+    repasBody.appendChild(row);
+  });
+
+  // 🗑️ Supprimer une ligne
+  repasBody.addEventListener("click", function(e) {
+    if (e.target.classList.contains("remove-row")) {
+      const row = e.target.closest("tr");
+      if (repasBody.querySelectorAll("tr").length > 1) {
+        row.remove();
+      } else {
+        alert("Il doit rester au moins une ligne !");
+      }
+    }
+  });
+
+  // ✅ Validation avant envoi
+  form.addEventListener("submit", function(e) {
+    // Vérification du tableau repas
+    const rows = repasBody.querySelectorAll("tr");
+    let valid = false;
+
+    for (let row of rows) {
+      const nom = row.querySelector('input[type="text"]').value.trim();
+      const checked = row.querySelector('input[type="radio"]:checked');
+      if (nom !== "" && checked) {
+        valid = true;
+        break;
+      }
+    }
+
+    if (!valid) {
+      e.preventDefault();
+      repasField.classList.add("error");
+      const err = repasField.querySelector(".form-error");
+      err.textContent = "Veuillez saisir au moins un repas employé avec un nom et un choix (Tacos ou Finger Food).";
+      repasField.scrollIntoView({behavior:'smooth', block:'center'});
+    } else {
+      repasField.classList.remove("error");
+    }
+  }, true);
+});
+</script>
 </body>
 </html>
