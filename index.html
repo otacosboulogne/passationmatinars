@@ -79,28 +79,6 @@
       vertical-align: top;
       background:#fff;
     }
-    /* Ajustement spécifique pour le tableau des repas */
-.repas-table.check {
-  border-collapse: collapse;
-  width: 100%;
-  margin-top: 4px;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.repas-table.check th,
-.repas-table.check td {
-  border: 1px solid #ccc;
-  padding: 6px 8px;
-}
-
-.repas-table.check input[type="text"] {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 6px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
     table.check th{
       background:#f2f2f2;
       font-weight: 700;
@@ -142,20 +120,8 @@
     .field label{display:block;font-size:12px;color:#333;margin:8px 0 4px}
     .field input, .field textarea, .field select{width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:13px}
 
-    .radio-row {
-  display: flex;
-  gap: 24px; /* espace plus grand entre Oui et Non */
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.radio-row label {
-  display: flex;
-  align-items: center;
-  gap: 8px; /* espace entre le rond et le texte */
-  font-size: 14px;
-  margin: 2px 0;
-}
+    .radio-row{display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+    .radio-row label{display:flex; align-items:center; gap:6px; font-size:13px; margin:0}
 
     .footer{
       display:grid;gap:12px;grid-template-columns: 1fr 1fr; margin-top: 16px;
@@ -223,7 +189,7 @@
 <!-- Tableau repas employés -->
 <div id="repas-employes" class="field repas-field" style="flex:1 1 420px;min-width:360px">
   <label>Repas employés</label>
-  <table class="repas-table check" aria-label="Repas employés">
+  <table class="repas-table" aria-label="Repas employés">
     <colgroup>
       <col style="width:50%">
       <col style="width:15%">
@@ -550,7 +516,7 @@
       for (const [k,v] of data.entries()) payload[k] = v;
 
       try{
-        const res = await fetch('https://script.google.com/macros/s/AKfycbw41BdwzlgKbOhYlQtOZ9_pTIC2BfWodPxN4GuDx8ciIEgBIRUXS9rUKXMdwsWZgsE/exec',{
+        const res = await fetch('https://script.google.com/macros/s/AKfycbwV6DAltJCzMh3o5Q5dUlyrnq539Al0OrdkJg8-5ZvCn2qUKD2o_2AD69zsX_NaVEyF/exec',{
           method:'POST',
           headers:{'Content-Type':'application/json'},
           body: JSON.stringify(payload)
