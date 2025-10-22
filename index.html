@@ -646,32 +646,73 @@ document.addEventListener("DOMContentLoaded", function() {
     const r = (meta.responsable||'').trim().toLowerCase();
     return `passation-sent-${d}-${r}`;
   }
-
- async function makePdfBlob(page){
-  // 🔧 Corrige les couleurs non supportées avant la capture
-  page.querySelectorAll('*').forEach(el=>{
-    const cs = getComputedStyle(el);
-    try {
-      // force les couleurs CSS "simples" en hexa
-      const color = cs.color;
-      const bg = cs.backgroundColor;
-      if (color && color.startsWith('color(')) el.style.color = '#111';
-      if (bg && bg.startsWith('color(')) el.style.backgroundColor = '#fff';
-    } catch(e){}
-  });
-
+async function makePdfBlob(page){
   const opt = {
-    margin: [5, 10, 10, 10],
-    pagebreak: { mode: 'avoid', avoid: '.page' },
+    margin: [5, 10, 10, 10],                 // marge top réduite
+    pagebreak: { mode: 'avoid', avoid: '.page' }, // pas de saut juste après .page
     html2canvas: {
       scale: 2,
       useCORS: true,
-      scrollY: 0
+      scrollY: 0,                            // évite la page blanche iOS
+      onclone: (doc) => {
+        const s = doc.createElement('style');
+        s.textContent = `
+          * { -webkit-appearance: none !important; appearance: none !important; }
+          input, select, textarea { background:#fff !important; color:#111 !important; }
+        `;
+        doc.head.appendChild(s);
+
+        const pageEl = doc.querySelector('.page');
+        if (pageEl){
+          pageEl.style.margin = '0';
+          pageEl.style.background = '#fff';
+          pageEl.style.borderRadius = '0';
+        }
+
+        // compactage du tableau
+        doc.querySelectorAll('table.check').forEach(t=>{
+          t.style.tableLayout = 'fixed';
+          t.style.width = '100%';
+          t.style.fontSize = '11px';
+        });
+        doc.querySelectorAll('table.check th, table.check td').forEach(c=>{
+          c.style.padding = '4px 6px';
+        });
+        doc.querySelectorAll('table.check th:nth-child(2), table.check td:nth-child(2), table.check th:nth-child(3), table.check td:nth-child(3)').forEach(c=>{
+          c.style.width = '64px';
+          c.style.whiteSpace = 'nowrap';
+          c.style.textAlign = 'center';
+        });
+        doc.querySelectorAll('table.check th:first-child, table.check td:first-child').forEach(c=>{
+          c.style.whiteSpace = 'normal';
+          c.style.wordBreak  = 'break-word';
+          c.style.hyphens    = 'auto';
+          c.style.lineHeight = '1.25';
+        });
+
+        // valeurs figées
+        ['date','time','number','text'].forEach(type=>{
+          doc.querySelectorAll(`input[type="${type}"]`).forEach(el=>{
+            el.setAttribute('value', el.value || '');
+          });
+        });
+        doc.querySelectorAll('textarea').forEach(t=>{
+          const v = t.value || '';
+          const repl = doc.createElement('div');
+          repl.style.whiteSpace = 'pre-wrap';
+          repl.style.border = '1px solid #ccc';
+          repl.style.borderRadius = '4px';
+          repl.style.padding = '8px';
+          repl.textContent = v;
+          t.parentNode.replaceChild(repl, t);
+        });
+      }
     },
     jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
   };
   return await html2pdf().set(opt).from(page).output('blob');
 }
+
   
   let formAlreadySent = false;
 
