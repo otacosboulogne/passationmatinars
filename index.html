@@ -611,12 +611,74 @@
   <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.min.js"></script>
 
   <!-- Envoi -->
- <!-- Envoi -->
 <script>
 document.addEventListener("DOMContentLoaded", function() {
 
   // <<< URL de ton déploiement WebApp >>>
   const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz9HRK0glIiN6DJupasx6meANOqPAAJ5A-NEYUeWRjgHiFBKJ7Pf_cwka5reQ-V7mzl/exec'; // ⚠️ remplace par ton lien réel
+  let formAlreadySent = false;
+
+  const form = document.getElementById('passationForm');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const btn = form.querySelector('button[type="submit"]');
+
+    const meta = {
+      date: form.date.value,
+      heure: form.heure.value,
+      responsable: (form.respUnique?.value || form.responsable?.value || '').trim(),
+      ruptures: (form.ruptures?.value || '').trim()
+    };
+
+    const key = makeKey(meta);
+    if (formAlreadySent || localStorage.getItem(key)){
+      showMessage('⚠️ Ce formulaire a déjà été envoyé.', 'error');
+      return;
+    }
+
+    // ✅ Désactive le bouton + texte pendant l’envoi
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = "Envoi en cours...";
+
+    const page = document.querySelector('.page');
+    const submitbar = document.querySelector('.submitbar');
+    const prevDisplay = submitbar.style.display;
+    submitbar.style.display = 'none';
+
+    try {
+      const pdfBlob = await makePdfBlob(page);
+      submitbar.style.display = prevDisplay;
+
+      const b64 = await blobToBase64(pdfBlob);
+      const body = new URLSearchParams({ data: JSON.stringify({ b64, meta }) });
+
+      const res = await fetch(WEBAPP_URL, { method:'POST', body });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const txt = await res.text();
+      let json; try { json = JSON.parse(txt); } catch { throw new Error('Réponse non-JSON'); }
+      if (json.status !== 'ok') throw new Error(json.message || 'Erreur serveur');
+
+      formAlreadySent = true;
+      localStorage.setItem(key, '1');
+
+      const title = document.getElementById('successTitle');
+      const details = document.getElementById('successDetails');
+      title.textContent = `Merci ${meta.responsable || ''} !`;
+      details.textContent = `La passation a bien été enregistrée${json.folder ? ' dans '+json.folder : ''}${json.name ? ' sous le nom '+json.name : ''}.`;
+      document.getElementById('successOverlay').classList.remove('hidden');
+
+    } catch (err) {
+      submitbar.style.display = prevDisplay;
+      console.error(err);
+      showMessage('❌ Échec de l’envoi : ' + err.message, 'error', true);
+    } finally {
+      // ✅ Réactive le bouton et remet le texte d’origine
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  });
 
   function showMessage(text, type, withRetry){
     const c = document.getElementById('formMessageContainer');
