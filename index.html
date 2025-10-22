@@ -653,18 +653,17 @@
   <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.min.js"></script>
 
   <!-- Envoi -->
+<!-- Envoi -->
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-
-  // <<< URL de ton déploiement WebApp >>>
-  const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz9HRK0glIiN6DJupasx6meANOqPAAJ5A-NEYUeWRjgHiFBKJ7Pf_cwka5reQ-V7mzl/exec'; // ⚠️ remplace par ton lien réel
+  const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz9HRK0glIiN6DJupasx6meANOqPAAJ5A-NEYUeWRjgHiFBKJ7Pf_cwka5reQ-V7mzl/exec';
+  const form = document.getElementById("passationForm");
+  const btn = form.querySelector('button[type="submit"]');
   let formAlreadySent = false;
 
-  const form = document.getElementById('passationForm');
-  form.addEventListener('submit', async (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
-
-    const btn = form.querySelector('button[type="submit"]');
+    if (formAlreadySent) return;
 
     const meta = {
       date: form.date.value,
@@ -673,21 +672,23 @@ document.addEventListener("DOMContentLoaded", function() {
       ruptures: (form.ruptures?.value || '').trim()
     };
 
-    const key = makeKey(meta);
-    if (formAlreadySent || localStorage.getItem(key)){
-      showMessage('⚠️ Ce formulaire a déjà été envoyé.', 'error');
+    // 🔒 Empêcher double envoi le même jour + même responsable
+    const key = `passation-${meta.date}-${meta.responsable.toLowerCase()}`;
+    if (localStorage.getItem(key)) {
+      alert("⚠️ Une checklist a déjà été envoyée aujourd’hui par ce responsable.");
       return;
     }
 
-    // ✅ Désactive le bouton + texte pendant l’envoi
+    // Désactiver le bouton pendant l’envoi
     btn.disabled = true;
-    const originalText = btn.textContent;
-    btn.textContent = "Envoi en cours...";
+    btn.textContent = "⏳ Envoi en cours...";
+    btn.style.opacity = "0.6";
+    btn.style.cursor = "not-allowed";
 
-    const page = document.querySelector('.page');
-    const submitbar = document.querySelector('.submitbar');
+    const page = document.querySelector(".page");
+    const submitbar = document.querySelector(".submitbar");
     const prevDisplay = submitbar.style.display;
-    submitbar.style.display = 'none';
+    submitbar.style.display = "none";
 
     try {
       const pdfBlob = await makePdfBlob(page);
@@ -696,196 +697,71 @@ document.addEventListener("DOMContentLoaded", function() {
       const b64 = await blobToBase64(pdfBlob);
       const body = new URLSearchParams({ data: JSON.stringify({ b64, meta }) });
 
-      const res = await fetch(WEBAPP_URL, { method:'POST', body });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const res = await fetch(WEBAPP_URL, { method: "POST", body });
       const txt = await res.text();
-      let json; try { json = JSON.parse(txt); } catch { throw new Error('Réponse non-JSON'); }
-      if (json.status !== 'ok') throw new Error(json.message || 'Erreur serveur');
+      if (!res.ok) throw new Error("HTTP " + res.status + " : " + txt);
 
+      const json = JSON.parse(txt);
+      if (json.status !== "ok") throw new Error(json.message || "Erreur serveur");
+
+      // ✅ Succès
       formAlreadySent = true;
-      localStorage.setItem(key, '1');
+      localStorage.setItem(key, "1");
 
-      const title = document.getElementById('successTitle');
-      const details = document.getElementById('successDetails');
+      btn.textContent = "✅ Checklist envoyée";
+      btn.style.background = "#2e7d32";
+
+      const title = document.getElementById("successTitle");
+      const details = document.getElementById("successDetails");
       title.textContent = `Merci ${meta.responsable || ''} !`;
-      details.textContent = `La passation a bien été enregistrée${json.folder ? ' dans '+json.folder : ''}${json.name ? ' sous le nom '+json.name : ''}.`;
-      document.getElementById('successOverlay').classList.remove('hidden');
+      details.textContent = "La passation a bien été enregistrée.";
+      document.getElementById("successOverlay").classList.remove("hidden");
 
     } catch (err) {
-      submitbar.style.display = prevDisplay;
       console.error(err);
-      showMessage('❌ Échec de l’envoi : ' + err.message, 'error', true);
-    } finally {
-      // ✅ Réactive le bouton et remet le texte d’origine
+      showMessage("❌ Échec de l’envoi : " + err.message, "error", true);
       btn.disabled = false;
-      btn.textContent = originalText;
+      btn.textContent = "Réessayer l’envoi";
+      btn.style.opacity = "1";
+      btn.style.cursor = "pointer";
     }
   });
 
-  function showMessage(text, type, withRetry){
-    const c = document.getElementById('formMessageContainer');
-    c.innerHTML = '';
-    const m = document.createElement('div');
-    m.className = 'form-message ' + (type === 'success' ? 'success' : 'error');
+  function blobToBase64(blob) {
+    return new Promise((resolve) => {
+      const r = new FileReader();
+      r.onloadend = () => resolve(r.result.split(",")[1]);
+      r.readAsDataURL(blob);
+    });
+  }
+
+  async function makePdfBlob(page) {
+    const opt = {
+      margin: [5, 10, 10, 10],
+      html2canvas: { scale: 2, scrollY: 0 },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+    };
+    return await html2pdf().set(opt).from(page).output("blob");
+  }
+
+  function showMessage(text, type, withRetry) {
+    const c = document.getElementById("formMessageContainer");
+    c.innerHTML = "";
+    const m = document.createElement("div");
+    m.className = "form-message " + (type === "success" ? "success" : "error");
     m.textContent = text;
-    if (withRetry){
-      const b = document.createElement('button');
-      b.type = 'button'; b.className = 'retry'; b.textContent = 'Réessayer';
-      b.onclick = () => document.querySelector('#passationForm button[type="submit"]').click();
+    if (withRetry) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "retry";
+      b.textContent = "Réessayer";
+      b.onclick = () => document.querySelector("#passationForm button[type='submit']").click();
       m.appendChild(b);
     }
     c.appendChild(m);
   }
-
-  function blobToBase64(blob){
-    return new Promise((resolve)=>{ 
-      const r=new FileReader(); 
-      r.onloadend=()=>resolve(r.result.split(',')[1]); 
-      r.readAsDataURL(blob); 
-    });
-  }
-
-  function makeKey(meta){
-    const d = meta.date || new Date().toISOString().slice(0,10);
-    const r = (meta.responsable||'').trim().toLowerCase();
-    return `passation-sent-${d}-${r}`;
-  }
-async function makePdfBlob(page){
-  const opt = {
-    margin: [5, 10, 10, 10],                 // marge top réduite
-    pagebreak: { mode: 'avoid', avoid: '.page' }, // pas de saut juste après .page
-    html2canvas: {
-      scale: 2,
-      useCORS: true,
-      scrollY: 0,                            // évite la page blanche iOS
-      onclone: (doc) => {
-        const s = doc.createElement('style');
-        s.textContent = `
-          * { -webkit-appearance: none !important; appearance: none !important; }
-          input, select, textarea { background:#fff !important; color:#111 !important; }
-        `;
-        doc.head.appendChild(s);
-
-        const pageEl = doc.querySelector('.page');
-        if (pageEl){
-          pageEl.style.margin = '0';
-          pageEl.style.background = '#fff';
-          pageEl.style.borderRadius = '0';
-        }
-
-        // compactage du tableau
-        doc.querySelectorAll('table.check').forEach(t=>{
-          t.style.tableLayout = 'fixed';
-          t.style.width = '100%';
-          t.style.fontSize = '11px';
-        });
-        doc.querySelectorAll('table.check th, table.check td').forEach(c=>{
-          c.style.padding = '4px 6px';
-        });
-        doc.querySelectorAll('table.check th:nth-child(2), table.check td:nth-child(2), table.check th:nth-child(3), table.check td:nth-child(3)').forEach(c=>{
-          c.style.width = '64px';
-          c.style.whiteSpace = 'nowrap';
-          c.style.textAlign = 'center';
-        });
-        doc.querySelectorAll('table.check th:first-child, table.check td:first-child').forEach(c=>{
-          c.style.whiteSpace = 'normal';
-          c.style.wordBreak  = 'break-word';
-          c.style.hyphens    = 'auto';
-          c.style.lineHeight = '1.25';
-        });
-
-        // valeurs figées
-        ['date','time','number','text'].forEach(type=>{
-          doc.querySelectorAll(`input[type="${type}"]`).forEach(el=>{
-            el.setAttribute('value', el.value || '');
-          });
-        });
-        doc.querySelectorAll('textarea').forEach(t=>{
-          const v = t.value || '';
-          const repl = doc.createElement('div');
-          repl.style.whiteSpace = 'pre-wrap';
-          repl.style.border = '1px solid #ccc';
-          repl.style.borderRadius = '4px';
-          repl.style.padding = '8px';
-          repl.textContent = v;
-          t.parentNode.replaceChild(repl, t);
-        });
-      }
-    },
-    jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
-  };
-  return await html2pdf().set(opt).from(page).output('blob');
-}
-
-  
-  let formAlreadySent = false;
-
-  const form = document.getElementById('passationForm');
-  const btn  = document.querySelector('button[type="submit"]');
-
-  form.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-
-    console.log("📤 Tentative d’envoi du formulaire...");
-    btn.disabled = true;
-
-    const meta = {
-      date: form.date.value,
-      heure: form.heure.value,
-      responsable: (form.respUnique?.value || form.responsable?.value || '').trim(),
-      ruptures: (form.ruptures?.value || '').trim()
-    };
-
-    const key = makeKey(meta);
-    if (formAlreadySent || localStorage.getItem(key)){
-      showMessage('⚠️ Ce formulaire a déjà été envoyé.', 'error');
-      btn.disabled = false;
-      return;
-    }
-
-    const page = document.querySelector('.page');
-    const submitbar = document.querySelector('.submitbar');
-    const prevDisplay = submitbar.style.display;
-    submitbar.style.display = 'none';
-
-    try{
-      const pdfBlob = await makePdfBlob(page);
-      submitbar.style.display = prevDisplay;
-
-      const b64 = await blobToBase64(pdfBlob);
-      const body = new URLSearchParams({ data: JSON.stringify({ b64, meta }) });
-
-      console.log("📄 PDF généré, envoi vers Apps Script...");
-      const res = await fetch(WEBAPP_URL, { method:'POST', body });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const txt = await res.text();
-      console.log("📬 Réponse brute :", txt);
-
-      let json; 
-      try { json = JSON.parse(txt); } 
-      catch { throw new Error('Réponse non-JSON'); }
-
-      if (json.status !== 'ok') throw new Error(json.message || 'Erreur serveur');
-
-      formAlreadySent = true;
-      localStorage.setItem(key, '1');
-
-      const title = document.getElementById('successTitle');
-      const details = document.getElementById('successDetails');
-      title.textContent = `Merci ${meta.responsable || ''} !`;
-      details.textContent = `La passation a bien été enregistrée${json.folder ? ' dans '+json.folder : ''}${json.name ? ' sous le nom '+json.name : ''}.`;
-      document.getElementById('successOverlay').classList.remove('hidden');
-
-    } catch (err) {
-      submitbar.style.display = prevDisplay;
-      btn.disabled = false;
-      console.error(err);
-      showMessage('❌ Échec de l’envoi : ' + err.message, 'error', true);
-    }
-  });
 });
 </script>
-  <script>
 document.addEventListener("DOMContentLoaded", function() {
   const repasBody = document.getElementById("repas-body");
   const addBtn = document.getElementById("add-repas");
