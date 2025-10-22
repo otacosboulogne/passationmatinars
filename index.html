@@ -218,8 +218,7 @@
       { title: "Terrasse", tasks: [
         "Sol, tables, chaises",
         "Poubelle",
-        "Cendriers vides et disponibles",
-        "Sol et surfaces propres"
+        "Cendriers vides et disponibles"
       ]},
       { title: "Toilettes Clients", tasks: [
         "Papier / savon",
@@ -243,30 +242,29 @@
         "Eau à niveau dans bain-marie",
         "Friteuses filtrées",
         "Filtre friteuse changé",
-        "Emballages en suffisance"
+        "Emballages en suffisance",
+        "Sol et surfaces propres",
       ]},
-      { title: "Chambres froides", tasks: [
+      { title: "Chambre froide et Frigos", tasks: [
         "Décongélations préparées",
         "Sauces en double dans meuble froid",
-        "CF propres",
         "Caillebotis propres",
         "Étagères propres",
-        "Produits remontés / rotation faite",
-        "Bacs rouges remplis de frites"
+        "Produits remontés / rotation faite Ch- et frigos",
+        "Frigo 2 prtes et Frigo 1 porte propre (int/ext)"
       ]},
       { title: "Salle", tasks: [
         "Sol propre",
         "Tables, pieds de tables, chaises propres",
         "Poubelles propres et non pleines",
         "Musique en marche",
-        "Bornes fonctionnelles",
-        "Enseigne allumée (si nuit)"
+        "Bornes fonctionnelles"
       ]},
       { title: "Comptoir", tasks: [
         "Frigos à boissons remplis",
         "Comptoir desserts rempli",
         "Toppings, nappages, lait en suffisance",
-        "Télécommandes, agrafeuse, tampon, téléphone disponibles",
+        "Télécommandes, agrafeuse, et téléphone disponibles",
         "DLC contrôlées, signalement si besoin",
         "Meuble O’sucré propre et rangé",
         "Comptoir propre et rangé",
@@ -277,20 +275,21 @@
         "Savon, essuie-mains en suffisance",
         "Produits d’entretien en suffisance",
         "Rouleaux pleins dans imprimantes et TPE",
-        "Caisse comptée + celle de l'équipier + fond de caisse fait si Glory en panne"
+        "Caisse comptée + celle de l'équipier + fond de caisse fait si Glory en panne",
+        "Monnaie suffisante dans monnayeur (prévenir dans le groupe manager sinon)",
+        "Disponibilité produits en caisse / Borne / Uber (dès réception après rupture)"
       ]},
       { title: "Réserves", tasks: [
         "Réserve bien rangée",
         "Sol et étagères propres",
-        "FIFO / DLC",
-        "Disponibilité produits (dès réception après rupture)"
+        "FIFO / DLC"
+      
       ]},
       { title: "Étage", tasks: [
         "Sol propre",
         "Toilettes, lavabos, murs propres",
         "Savon, essuie-mains en suffisance",
-        "Poubelles non pleines",
-        "Miroirs propres"
+        "Poubelles non pleines"
       ]},
       { title: "Plonge", tasks: [
         "Plonge terminée",
@@ -325,7 +324,7 @@
         "Bornes fonctionnelles"
       ])],
       ["Réserves", new Set([
-        "Disponibilité produits (dès réception après rupture)"   // << obligatoire: rouge + "À faire" désactivé
+        "FIFO / DLC"   // << obligatoire: rouge + "À faire" désactivé
       ])],
       ["Plonge", new Set([
         "Produits diluer et en suffisance"
@@ -333,7 +332,7 @@
       ["Toilettes Clients", new Set([
         "Papier / savon"
       ])],
-      ["Chambres froides", new Set([
+      ["Chambre froide et frigos", new Set([
         "Décongélations préparées",
         "Produits remontés / rotation faite"
       ])],
@@ -344,7 +343,8 @@
         "DLC contrôlées, signalement si besoin",
         "Plateaux propres et dressés",
         "Rouleaux pleins dans imprimantes et TPE",
-        "Caisse comptée + celle de l'équipier + fond de caisse fait si Glory en panne"
+        "Caisse comptée + celle de l'équipier + fond de caisse fait si Glory en panne",
+        "Disponibilité produits en caisse / Borne / Uber (dès réception après rupture)"
       ])],
       ["E-Pack Hygiène", new Set([
         "Nettoyage des postes rempli",
@@ -477,7 +477,7 @@
       for (const [k,v] of data.entries()) payload[k] = v;
 
       try{
-        const res = await fetch('https://script.google.com/macros/s/VOTRE_SCRIPT_ID/exec',{
+        const res = await fetch('https://script.google.com/macros/s/AKfycbwV6DAltJCzMh3o5Q5dUlyrnq539Al0OrdkJg8-5ZvCn2qUKD2o_2AD69zsX_NaVEyF/exec',{
           method:'POST',
           headers:{'Content-Type':'application/json'},
           body: JSON.stringify(payload)
