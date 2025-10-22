@@ -6,56 +6,137 @@
   <title>CONTRÔLE PASSATION MIDI</title>
   <style>
     :root{
-      --ink:#111; --muted:#666; --line:#1a1a1a; --bg:#fff; --accent:#000;
-      --ok-bg:#e8f5e9; --ok-accent:#2e7d32;
-      --todo-bg:#ffebee; --todo-accent:#c62828;
-      --passation-bg:#e8f5e9;
+      --ink:#111;
+      --muted:#666;
+      --line:#1a1a1a;
+      --bg:#fff;
+      --accent:#000;
+      --ok-bg:#e8f5e9;      /* vert très clair */
+      --ok-accent:#2e7d32;  /* vert foncé */
+      --todo-bg:#ffebee;    /* rouge très clair */
+      --todo-accent:#c62828;/* rouge foncé */
+      --passation-bg:#e8f5e9;   /* fond vert (comme PDF) */
     }
     html,body{height:100%}
-    body{font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--bg);margin:0}
+    body{
+      font-family: Arial, Helvetica, sans-serif;
+      color:var(--ink);
+      background:var(--bg);
+      margin:0;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
 
-    .page{max-width:980px;margin:24px auto;padding:24px;background:var(--passation-bg);border-radius:10px}
-    h1{text-align:center;font-size:24px;margin:0 0 18px}
+    /* Page avec fond vert */
+    .page{
+      max-width: 980px;
+      margin: 24px auto;
+      padding: 24px;
+      background: var(--passation-bg);
+      border-radius: 10px;
+    }
 
-    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+    h1{
+      text-align:center;
+      letter-spacing: .5px;
+      font-size: 24px;
+      margin: 0 0 18px;
+    }
 
-    .block{background:#fff;border:2px solid var(--line);border-radius:6px;padding:10px 10px 6px;page-break-inside:avoid}
-    .block h2{font-size:16px;margin:0 0 8px;text-transform:uppercase;letter-spacing:.5px}
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 900px){
+      .grid{ grid-template-columns: 1fr; }
+    }
 
-    /* Tableaux des checklists */
-    table.check{border-collapse:collapse;width:100%;font-size:13px;color:var(--ink)}
-    table.check th,table.check td{border:1px solid #ccc;padding:6px 8px;vertical-align:top;background:#fff}
-    table.check th{background:#f2f2f2;font-weight:700;text-align:left}
-    table.check th:nth-child(2),table.check th:nth-child(3){width:72px;text-align:center}
-    table.check td:nth-child(2),table.check td:nth-child(3){text-align:center}
-    .head-todo{background:var(--todo-bg)!important;color:var(--todo-accent);border-color:var(--todo-accent)!important}
-    .head-ok{background:var(--ok-bg)!important;color:var(--ok-accent);border-color:var(--ok-accent)!important}
-    .is-todo td{background:var(--todo-bg)} .is-ok td{background:var(--ok-bg)}
-    .is-required td:first-child,.is-required td:first-child *{color:var(--todo-accent)!important;font-weight:700}
+    .block{
+      background:#fff;
+      border: 2px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 10px 6px;
+      page-break-inside: avoid;
+    }
 
-    .notes{margin-top:16px;border:2px solid var(--line);border-radius:6px;padding:10px;background:#fff}
+    .block h2{
+      font-size: 16px;
+      margin: 0 0 8px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    table.check{
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 13px;
+      color: var(--ink);
+    }
+    table.check th, table.check td{
+      border: 1px solid #ccc;
+      padding: 6px 8px;
+      vertical-align: top;
+      background:#fff;
+    }
+    table.check th{
+      background:#f2f2f2;
+      font-weight: 700;
+      text-align:left;
+      color: var(--ink);
+    }
+    table.check th:nth-child(2),
+    table.check th:nth-child(3){ width:72px; text-align:center; }
+    table.check td:nth-child(2),
+    table.check td:nth-child(3){ text-align:center; }
+
+    .head-todo{ background: var(--todo-bg) !important; color: var(--todo-accent); border-color: var(--todo-accent) !important; }
+    .head-ok{ background: var(--ok-bg) !important;   color: var(--ok-accent);   border-color: var(--ok-accent) !important; }
+
+    .is-todo td{ background: var(--todo-bg); }
+    .is-ok   td{ background: var(--ok-bg); }
+
+    /* Rouge uniquement sur l'intitulé (1ère colonne) des tâches obligatoires */
+    .is-required td:first-child,
+    .is-required td:first-child *{
+      color: var(--todo-accent) !important;
+      font-weight: 700;
+    }
+
+    .legend{font-size:12px;color:var(--muted);margin:6px 0 0}
+
+    .notes{
+      margin-top: 16px;
+      border:2px solid var(--line);
+      border-radius:6px;
+      padding: 10px;
+      background:#fff;
+    }
     .notes h3{margin:0 0 6px;font-size:14px;text-transform:uppercase}
     .notes textarea{width:100%;min-height:90px;border:1px solid #ccc;border-radius:4px;padding:8px;font-family:inherit;font-size:13px}
 
     .flex{display:flex;gap:12px;flex-wrap:wrap}
     .flex .field{flex:1 1 220px}
     .field label{display:block;font-size:12px;color:#333;margin:8px 0 4px}
-    .field input,.field textarea,.field select{width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:13px}
+    .field input, .field textarea, .field select{width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:13px}
 
-    .radio-row{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
-    .radio-row label{display:flex;align-items:center;gap:6px;font-size:13px;margin:0}
+    .radio-row{display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+    .radio-row label{display:flex; align-items:center; gap:6px; font-size:13px; margin:0}
 
-    /* Tableau REPAS SANS BORDURES */
-    .repas-table{border-collapse:collapse;width:100%;margin-top:6px;border:none}
-    .repas-table th,.repas-table td{border:none;padding:6px 8px;vertical-align:middle;background:#fff}
-    .repas-table thead th{background:transparent;font-weight:600;text-align:left;border-bottom:2px solid #ccc}
-    .repas-table td.center{text-align:center}
+    .footer{
+      display:grid;gap:12px;grid-template-columns: 1fr 1fr; margin-top: 16px;
+    }
+    @media (max-width: 700px){.footer{grid-template-columns:1fr}}
 
     .submitbar{display:flex;gap:12px;align-items:center;justify-content:flex-end;margin-top:18px}
-    button[type="submit"]{background:#111;color:#fff;border:none;border-radius:6px;padding:10px 16px;font-weight:700;cursor:pointer}
-    button[type="reset"]{display:none!important}
-    input[disabled]{opacity:.35;cursor:not-allowed}
+    button[type="submit"]{
+      background:#111;color:#fff;border:none;border-radius:6px;padding:10px 16px;font-weight:700;cursor:pointer
+    }
+
+    /* Bouton reset retiré */
+    button[type="reset"]{display:none !important}
+
+    input[disabled]{opacity:.35; cursor:not-allowed;}
 
     @media print{
       body{background:#fff}
@@ -90,47 +171,53 @@
         <div class="block">
           <h2>Informations importantes</h2>
           <div class="flex">
-            <!-- Pertes + détail dynamique -->
-            <div class="field">
-              <label for="nombrePertesConception">Nombre de pertes de conception en cuisine durant ton service</label>
-              <input id="nombrePertesConception" name="nombrePertesConception" type="number" inputmode="numeric" min="0" step="1" placeholder="0" required>
-              <div id="detailPertesConception" class="field" style="display:none;">
-                <label for="detailsPertesConception">Détail des pertes de conception</label>
-                <textarea id="detailsPertesConception" name="detailsPertesConception" placeholder="Précisez les produits ou erreurs..."></textarea>
-              </div>
-            </div>
+            <!-- Nombre de pertes + champ détaillé -->
+<div class="field">
+  <label for="nombrePertesConception">Nombre de pertes de conception en cuisine durant ton service</label>
+  <input id="nombrePertesConception" name="nombrePertesConception" type="number" inputmode="numeric" min="0" step="1" placeholder="0" required>
+  <div id="detailPertesConception" class="field" style="display:none;">
+  <label for="detailsPertesConception">Détail des pertes de conception</label>
+  <textarea id="detailsPertesConception" name="detailsPertesConception" placeholder="Précisez les produits ou erreurs..."></textarea>
+</div>
+</div>
 
-            <!-- Repas employés (dynamique) -->
-            <div id="repas-employes" class="field repas-field" style="flex:1 1 420px;min-width:360px">
-              <label>Repas employés</label>
-              <table class="repas-table" aria-label="Repas employés">
-                <colgroup>
-                  <col style="width:50%"><col style="width:15%"><col style="width:15%"><col style="width:20%">
-                </colgroup>
-                <thead>
-                  <tr>
-                    <th>Nom du salarié</th>
-                    <th>Tacos</th>
-                    <th>Finger Food</th>
-                    <th>Supprimer</th>
-                  </tr>
-                </thead>
-                <tbody id="repas-body">
-                  <tr>
-                    <td><input type="text" name="employe_nom_1" placeholder="Nom et prénom" aria-label="Nom du salarié 1"></td>
-                    <td class="center"><input type="radio" name="employe_1_repas" value="tacos" aria-label="Tacos - salarié 1"></td>
-                    <td class="center"><input type="radio" name="employe_1_repas" value="finger" aria-label="Finger Food - salarié 1"></td>
-                    <td class="center"><button type="button" class="remove-row" style="background:#c62828;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">🗑️</button></td>
-                  </tr>
-                </tbody>
-              </table>
-              <button type="button" id="add-repas" style="margin-top:8px;background:#1565c0;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;">
-                + Ajouter un repas
-              </button>
-              <p class="form-error" aria-live="polite"></p>
-            </div>
+<div id="detailPertesConception" class="field" style="display:none;">
+  <label for="detailsPertesConception">Détail des pertes de conception</label>
+  <textarea id="detailsPertesConception" name="detailsPertesConception" placeholder="Précisez les produits ou erreurs..."></textarea>
+</div>
 
-            <!-- Radios infos -->
+<!-- Tableau repas employés -->
+<div id="repas-employes" class="field repas-field" style="flex:1 1 420px;min-width:360px">
+  <label>Repas employés</label>
+  <table class="repas-table" aria-label="Repas employés">
+    <colgroup>
+      <col style="width:50%">
+      <col style="width:15%">
+      <col style="width:15%">
+      <col style="width:20%">
+    </colgroup>
+    <thead>
+      <tr>
+        <th>Nom du salarié</th>
+        <th>Tacos</th>
+        <th>Finger Food</th>
+        <th>Supprimer</th>
+      </tr>
+    </thead>
+    <tbody id="repas-body">
+      <tr>
+        <td><input type="text" name="employe_nom_1" placeholder="Nom et prénom" aria-label="Nom du salarié 1"></td>
+        <td class="center"><input type="radio" name="employe_1_repas" value="tacos" aria-label="Tacos"></td>
+        <td class="center"><input type="radio" name="employe_1_repas" value="finger" aria-label="Finger Food"></td>
+        <td class="center"><button type="button" class="remove-row" style="background:#c62828;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">🗑️</button></td>
+      </tr>
+    </tbody>
+  </table>
+  <button type="button" id="add-repas" style="margin-top:8px;background:#1565c0;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;">
+    + Ajouter un repas
+  </button>
+  <p class="form-error" aria-live="polite"></p>
+</div>
             <div class="field" style="flex:1 1 280px">
               <label>La commande sur Inpulse a été validée</label>
               <div class="radio-row" role="radiogroup" aria-label="Commande validée">
@@ -147,13 +234,13 @@
             </div>
           </div>
         </div>
-
+        
         <div class="block">
           <h2>Informations de passation</h2>
           <div class="flex">
-            <div class="field"><label for="date">Date</label><input id="date" name="date" type="date" required></div>
-            <div class="field"><label for="heure">Heure</label><input id="heure" name="heure" type="time" required></div>
-            <div class="field" style="flex:1 1 280px"><label for="respUnique">Nom du responsable</label><input id="respUnique" name="responsable" type="text" required></div>
+            <div class="field"><label for="date">Date</label><input id="date" name="date" type="date" required /></div>
+            <div class="field"><label for="heure">Heure</label><input id="heure" name="heure" type="time" required /></div>
+            <div class="field" style="flex:1 1 280px"><label for="respUnique">Nom du responsable</label><input id="respUnique" name="responsable" type="text" required /></div>
           </div>
         </div>
       </div>
@@ -164,33 +251,147 @@
     </form>
   </div>
 
-  <!-- ===== SCRIPTS ===== -->
   <script>
-    /* --------- SECTIONS (checklists) --------- */
+    // --- Modèle des sections et tâches ---
     const SECTIONS = [
-      { title: "Terrasse", tasks: ["Sol, tables, chaises","Poubelle","Cendriers vides et disponibles"]},
-      { title: "Toilettes Clients", tasks: ["Papier / savon","Toilettes (cuvette, lunette, rebords)","Odeur","Miroir","Poubelle propre et non pleine","Sèche-mains propre et fonctionnel"]},
-      { title: "Cuisine", tasks: ["Viandes et suppléments en suffisance","Sauces en suffisance","Frigo rempli","Essuie-mains, savon en suffisance","Poubelles changées","Traçabilité prise","Pertes comptabilisées","Galettes descendues","Rouleaux de papier dans imprimantes","Huile à niveau dans les friteuses","Eau à niveau dans bain-marie","Friteuses filtrées","Filtre friteuse changé","Emballages en suffisance","Sol et surfaces propres"]},
-      { title: "Chambre froide et Frigos", tasks: ["Décongélations préparées","Sauces en double dans meuble froid","Caillebotis propres","Étagères propres","Produits remontés / rotation faite Ch- et frigos","Frigo 2 prtes et Frigo 1 porte propre (int/ext)"]},
-      { title: "Salle", tasks: ["Sol propre","Tables, pieds de tables, chaises propres","Poubelles propres et non pleines","Musique en marche","Bornes fonctionnelles"]},
-      { title: "Comptoir", tasks: ["Frigos à boissons remplis","Comptoir desserts rempli","Toppings, nappages, lait en suffisance","Télécommandes, agrafeuse, et téléphone disponibles","DLC contrôlées, signalement si besoin","Meuble O’sucré propre et rangé","Comptoir propre et rangé","Présence pailles/serviettes/gobelets/emballages","Plateaux propres et dressés","Machine à glace propre","Vaisselle propre","Savon, essuie-mains en suffisance","Produits d’entretien en suffisance","Rouleaux pleins dans imprimantes et TPE","Caisse comptée + celle de l'équipier + fond de caisse fait si Glory en panne","Monnaie suffisante dans monnayeur (prévenir dans le groupe manager sinon)","Disponibilité produits en caisse / Borne / Uber (dès réception après rupture)"]},
-      { title: "Réserves", tasks: ["Réserve bien rangée","Sol et étagères propres","FIFO / DLC"]},
-      { title: "Étage", tasks: ["Sol propre","Toilettes, lavabos, murs propres","Savon, essuie-mains en suffisance","Poubelles non pleines"]},
-      { title: "Plonge", tasks: ["Plonge terminée","Zone et matériel propres","Produits diluer et en suffisance"]},
-      { title: "E-Pack Hygiène", tasks: ["Nettoyage des postes rempli","Check-list manager remplie"]},
-      { title: "Tenue du personnel", tasks: ["Complète, propre, repassée","Cheveux attachés","Pas de bijoux sauf alliance","Charlotte, tablier, sur-chaussures en cuisine"]}
+      { title: "Terrasse", tasks: [
+        "Sol, tables, chaises",
+        "Poubelle",
+        "Cendriers vides et disponibles"
+      ]},
+      { title: "Toilettes Clients", tasks: [
+        "Papier / savon",
+        "Toilettes (cuvette, lunette, rebords)",
+        "Odeur",
+        "Miroir",
+        "Poubelle propre et non pleine",
+        "Sèche-mains propre et fonctionnel"
+      ]},
+      { title: "Cuisine", tasks: [
+        "Viandes et suppléments en suffisance",
+        "Sauces en suffisance",
+        "Frigo rempli",
+        "Essuie-mains, savon en suffisance",
+        "Poubelles changées",
+        "Traçabilité prise",
+        "Pertes comptabilisées",
+        "Galettes descendues",
+        "Rouleaux de papier dans imprimantes",
+        "Huile à niveau dans les friteuses",
+        "Eau à niveau dans bain-marie",
+        "Friteuses filtrées",
+        "Filtre friteuse changé",
+        "Emballages en suffisance",
+        "Sol et surfaces propres",
+      ]},
+      { title: "Chambre froide et Frigos", tasks: [
+        "Décongélations préparées",
+        "Sauces en double dans meuble froid",
+        "Caillebotis propres",
+        "Étagères propres",
+        "Produits remontés / rotation faite Ch- et frigos",
+        "Frigo 2 prtes et Frigo 1 porte propre (int/ext)"
+      ]},
+      { title: "Salle", tasks: [
+        "Sol propre",
+        "Tables, pieds de tables, chaises propres",
+        "Poubelles propres et non pleines",
+        "Musique en marche",
+        "Bornes fonctionnelles"
+      ]},
+      { title: "Comptoir", tasks: [
+        "Frigos à boissons remplis",
+        "Comptoir desserts rempli",
+        "Toppings, nappages, lait en suffisance",
+        "Télécommandes, agrafeuse, et téléphone disponibles",
+        "DLC contrôlées, signalement si besoin",
+        "Meuble O’sucré propre et rangé",
+        "Comptoir propre et rangé",
+        "Présence pailles/serviettes/gobelets/emballages",
+        "Plateaux propres et dressés",
+        "Machine à glace propre",
+        "Vaisselle propre",
+        "Savon, essuie-mains en suffisance",
+        "Produits d’entretien en suffisance",
+        "Rouleaux pleins dans imprimantes et TPE",
+        "Caisse comptée + celle de l'équipier + fond de caisse fait si Glory en panne",
+        "Monnaie suffisante dans monnayeur (prévenir dans le groupe manager sinon)",
+        "Disponibilité produits en caisse / Borne / Uber (dès réception après rupture)"
+      ]},
+      { title: "Réserves", tasks: [
+        "Réserve bien rangée",
+        "Sol et étagères propres",
+        "FIFO / DLC"
+      
+      ]},
+      { title: "Étage", tasks: [
+        "Sol propre",
+        "Toilettes, lavabos, murs propres",
+        "Savon, essuie-mains en suffisance",
+        "Poubelles non pleines"
+      ]},
+      { title: "Plonge", tasks: [
+        "Plonge terminée",
+        "Zone et matériel propres",
+        "Produits diluer et en suffisance"
+      ]},
+      { title: "E-Pack Hygiène", tasks: [
+        "Nettoyage des postes rempli",
+        "Check-list manager remplie"
+      ]},
+      { title: "Tenue du personnel", tasks: [
+        "Complète, propre, repassée",
+        "Cheveux attachés",
+        "Pas de bijoux sauf alliance",
+        "Charlotte, tablier, sur-chaussures en cuisine"
+      ]}
     ];
 
+    // Tâches obligatoires = OK uniquement + libellé rouge
     const OK_ONLY = new Map([
-      ["Cuisine", new Set(["Viandes et suppléments en suffisance","Sauces en suffisance","Essuie-mains, savon en suffisance","Galettes descendues","Rouleaux de papier dans imprimantes","Huile à niveau dans les friteuses","Eau à niveau dans bain-marie","Emballages en suffisance"])],
-      ["Salle", new Set(["Bornes fonctionnelles"])],
-      ["Réserves", new Set(["FIFO / DLC"])],
-      ["Plonge", new Set(["Produits diluer et en suffisance"])],
-      ["Toilettes Clients", new Set(["Papier / savon"])],
-      ["Chambre froide et Frigos", new Set(["Décongélations préparées","Produits remontés / rotation faite Ch- et frigos"])],
-      ["Comptoir", new Set(["Frigos à boissons remplis","Comptoir desserts rempli","Toppings, nappages, lait en suffisance","DLC contrôlées, signalement si besoin","Plateaux propres et dressés","Rouleaux pleins dans imprimantes et TPE","Caisse comptée + celle de l'équipier + fond de caisse fait si Glory en panne","Disponibilité produits en caisse / Borne / Uber (dès réception après rupture)")]],
-      ["E-Pack Hygiène", new Set(["Nettoyage des postes rempli","Check-list manager remplie"])],
-      ["Tenue du personnel", new Set(["Charlotte, tablier, sur-chaussures en cuisine"])]
+      ["Cuisine", new Set([
+        "Viandes et suppléments en suffisance",
+        "Sauces en suffisance",
+        "Essuie-mains, savon en suffisance",
+        "Galettes descendues",
+        "Rouleaux de papier dans imprimantes",
+        "Huile à niveau dans les friteuses",
+        "Eau à niveau dans bain-marie",
+        "Emballages en suffisance"
+      ])],
+      ["Salle", new Set([
+        "Bornes fonctionnelles"
+      ])],
+      ["Réserves", new Set([
+        "FIFO / DLC"   // << obligatoire: rouge + "À faire" désactivé
+      ])],
+      ["Plonge", new Set([
+        "Produits diluer et en suffisance"
+      ])],
+      ["Toilettes Clients", new Set([
+        "Papier / savon"
+      ])],
+      ["Chambre froide et frigos", new Set([
+        "Décongélations préparées",
+        "Produits remontés / rotation faite"
+      ])],
+      ["Comptoir", new Set([
+        "Frigos à boissons remplis",
+        "Comptoir desserts rempli",
+        "Toppings, nappages, lait en suffisance",
+        "DLC contrôlées, signalement si besoin",
+        "Plateaux propres et dressés",
+        "Rouleaux pleins dans imprimantes et TPE",
+        "Caisse comptée + celle de l'équipier + fond de caisse fait si Glory en panne",
+        "Disponibilité produits en caisse / Borne / Uber (dès réception après rupture)"
+      ])],
+      ["E-Pack Hygiène", new Set([
+        "Nettoyage des postes rempli",
+        "Check-list manager remplie"
+      ])],
+      ["Tenue du personnel", new Set([
+        "Charlotte, tablier, sur-chaussures en cuisine"
+      ])]
     ]);
 
     function isOkOnly(sectionTitle, taskText){
@@ -199,26 +400,42 @@
 
     const sectionsRoot = document.getElementById('sections');
 
+    // Fabrique un bloc standard avec gestion "OK uniquement" + marquage rouge sur l'intitulé
     function buildStandardBlock(section){
-      const block = document.createElement('section'); block.className='block';
-      const h = document.createElement('h2'); h.textContent = section.title.toUpperCase();
+      const block = document.createElement('section');
+      block.className = 'block';
 
-      const table = document.createElement('table'); table.className='check';
+      const h = document.createElement('h2');
+      h.textContent = section.title.toUpperCase();
+
+      const table = document.createElement('table');
+      table.className = 'check';
+
       const thead = document.createElement('thead');
-      thead.innerHTML = `<tr><th>Tâche</th><th class="head-todo">À FAIRE</th><th class="head-ok">OK</th></tr>`;
+      thead.innerHTML = `<tr>
+        <th>Tâche</th>
+        <th class="head-todo">À FAIRE</th>
+        <th class="head-ok">OK</th>
+      </tr>`;
+
       const tbody = document.createElement('tbody');
 
       section.tasks.forEach((task, tIdx) => {
         const id = `${section.title.replace(/[^a-z0-9]/gi,'_').toLowerCase()}_${tIdx}`;
         const onlyOk = isOkOnly(section.title, task);
+
         const tr = document.createElement('tr');
         if (onlyOk) tr.classList.add('is-required');
+
         tr.innerHTML = `
           <td>${task}</td>
-          <td>${ onlyOk ? `<input type="radio" disabled title="Non disponible pour cette tâche">`
-                         : `<input type="radio" name="${id}" value="A faire" aria-label="${task} - A faire">` }</td>
-          <td><input type="radio" name="${id}" value="OK" aria-label="${task} - OK"></td>
+          <td>${ onlyOk
+                ? `<input type="radio" disabled title="Non disponible pour cette tâche">`
+                : `<input type="radio" name="${id}" value="A faire" aria-label="${task} à faire" />`
+              }</td>
+          <td><input type="radio" name="${id}" value="OK" aria-label="${task} ok" /></td>
         `;
+
         tr.addEventListener('change', (e) => {
           if(e.target.name === id){
             tr.classList.remove('is-todo','is-ok');
@@ -226,27 +443,44 @@
             if(e.target.value === 'OK')      tr.classList.add('is-ok');
           }
         });
+
         tbody.appendChild(tr);
       });
 
-      table.appendChild(thead); table.appendChild(tbody);
-      block.appendChild(h); block.appendChild(table);
+      table.appendChild(thead);
+      table.appendChild(tbody);
+      block.appendChild(h);
+      block.appendChild(table);
       return block;
     }
 
+    // Bloc OBJECTIF (Oui / Non)
     function buildObjectifBlock(){
-      const block = document.createElement('section'); block.className='block';
-      const h = document.createElement('h2'); h.textContent = 'OBJECTIF';
-      const table = document.createElement('table'); table.className='check';
+      const block = document.createElement('section');
+      block.className = 'block';
+
+      const h = document.createElement('h2');
+      h.textContent = 'OBJECTIF';
+
+      const table = document.createElement('table');
+      table.className = 'check';
+
       const thead = document.createElement('thead');
-      thead.innerHTML = `<tr><th>Élément</th><th class="head-ok">Oui</th><th class="head-todo">Non</th></tr>`;
+      thead.innerHTML = `<tr>
+        <th>Élément</th>
+        <th class="head-ok">Oui</th>
+        <th class="head-todo">Non</th>
+      </tr>`;
+
       const tbody = document.createElement('tbody');
 
-      [
+      const rows = [
         { label: "Objectif avis Google donné au salarié en caisse", name: "objectifAvisGoogle" },
         { label: "Briefing et débriefing effectués", name: "briefingDebriefing" },
         { label: "Satisfait du service", name: "satisfaitService" }
-      ].forEach(r=>{
+      ];
+
+      rows.forEach(r => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${r.label}</td>
@@ -256,83 +490,25 @@
         tbody.appendChild(tr);
       });
 
-      table.appendChild(thead); table.appendChild(tbody);
-      block.appendChild(h); block.appendChild(table);
+      table.appendChild(thead);
+      table.appendChild(tbody);
+      block.appendChild(h);
+      block.appendChild(table);
       return block;
     }
 
-    // Génère les sections + insère OBJECTIF après "E-Pack Hygiène"
+    // Génération des sections + insertion OBJECTIF après "E-Pack Hygiène"
     SECTIONS.forEach((section) => {
       const block = buildStandardBlock(section);
       sectionsRoot.appendChild(block);
-      if (section.title === "E-Pack Hygiène") sectionsRoot.appendChild(buildObjectifBlock());
-    });
 
-    /* --------- Interactions : pertes + repas --------- */
-    document.addEventListener("DOMContentLoaded", () => {});
-    const pertesInput = document.getElementById("nombrePertesConception");
-    const detailField = document.getElementById("detailPertesConception");
-    const detailTextarea = document.getElementById("detailsPertesConception");
-
-    pertesInput.addEventListener("input", function(){
-      const v = parseInt(pertesInput.value,10);
-      if(!isNaN(v) && v > 0){
-        detailField.style.display = "block";
-        detailTextarea.setAttribute("required","required");
-      }else{
-        detailField.style.display = "none";
-        detailTextarea.removeAttribute("required");
-        detailTextarea.value = "";
+      if (section.title === "E-Pack Hygiène") {
+        const objectifBlock = buildObjectifBlock();
+        sectionsRoot.appendChild(objectifBlock);
       }
     });
 
-    const repasBody = document.getElementById("repas-body");
-    const addBtn    = document.getElementById("add-repas");
-    const repasField= document.getElementById("repas-employes");
-    const form      = document.getElementById("passationForm");
-    let count = 1;
-
-    addBtn.addEventListener("click", function(){
-      count++;
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td><input type="text" name="employe_nom_${count}" placeholder="Nom et prénom" aria-label="Nom du salarié ${count}"></td>
-        <td class="center"><input type="radio" name="employe_${count}_repas" value="tacos" aria-label="Tacos - salarié ${count}"></td>
-        <td class="center"><input type="radio" name="employe_${count}_repas" value="finger" aria-label="Finger Food - salarié ${count}"></td>
-        <td class="center"><button type="button" class="remove-row" style="background:#c62828;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">🗑️</button></td>
-      `;
-      repasBody.appendChild(row);
-    });
-
-    repasBody.addEventListener("click", function(e){
-      if(e.target.classList.contains("remove-row")){
-        const row = e.target.closest("tr");
-        if (repasBody.querySelectorAll("tr").length > 1) row.remove();
-        else alert("Il doit rester au moins une ligne !");
-      }
-    });
-
-    // Validation : au moins une ligne repas valide (nom + radio)
-    form.addEventListener("submit", function(e){
-      const rows = repasBody.querySelectorAll("tr");
-      let valid = false;
-      for (let row of rows){
-        const nom = row.querySelector('input[type="text"]').value.trim();
-        const checked = row.querySelector('input[type="radio"]:checked');
-        if (nom && checked){ valid = true; break; }
-      }
-      if (!valid){
-        e.preventDefault();
-        repasField.classList.add("error");
-        const err = repasField.querySelector(".form-error");
-        if (err) err.textContent = "Veuillez saisir au moins un repas employé avec un nom et un choix (Tacos ou Finger Food).";
-        repasField.scrollIntoView({behavior:'smooth', block:'center'});
-      }else{
-        repasField.classList.remove("error");
-      }
-    });
-
-    /* --------- Envoi Apps Script (adapter l’URL si besoin) --------- */
+    // Soumission vers Google Apps Script (adapter l'URL)
     document.getElementById('passationForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const data = new FormData(e.target);
@@ -351,7 +527,87 @@
         console.error(err);
         alert("Échec de l'envoi. Vérifiez la connexion ou l'URL du script.");
       }
-    }, { once:true });
+    });
   </script>
+ <script>
+document.addEventListener("DOMContentLoaded", function() {
+  const repasBody = document.getElementById("repas-body");
+  const addBtn = document.getElementById("add-repas");
+  const repasField = document.getElementById("repas-employes");
+  let count = 1;
+
+  // ➕ Ajouter une nouvelle ligne
+  addBtn.addEventListener("click", function() {
+    count++;
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td><input type="text" name="employe_nom_${count}" placeholder="Nom et prénom" aria-label="Nom du salarié ${count}"></td>
+      <td class="center"><input type="radio" name="employe_${count}_repas" value="tacos"></td>
+      <td class="center"><input type="radio" name="employe_${count}_repas" value="finger"></td>
+      <td class="center"><button type="button" class="remove-row" style="background:#c62828;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">🗑️</button></td>
+    `;
+    repasBody.appendChild(row);
+  });
+
+  // 🗑️ Supprimer une ligne
+  repasBody.addEventListener("click", function(e) {
+    if (e.target.classList.contains("remove-row")) {
+      const row = e.target.closest("tr");
+      // Empêche de supprimer la dernière ligne restante
+      if (repasBody.querySelectorAll("tr").length > 1) {
+        row.remove();
+      } else {
+        alert("Il doit rester au moins une ligne !");
+      }
+    }
+  });
+
+  // 🔍 Validation repas : au moins une ligne avec un repas coché
+  const form = document.getElementById("passationForm");
+  form.addEventListener("submit", function(e) {
+    const rows = repasBody.querySelectorAll("tr");
+    let valid = false;
+
+    for (let row of rows) {
+      const nom = row.querySelector('input[type="text"]').value.trim();
+      const checked = row.querySelector('input[type="radio"]:checked');
+      if (nom !== "" && checked) {
+        valid = true;
+        break;
+      }
+    }
+
+    if (!valid) {
+      e.preventDefault();
+      repasField.classList.add("error");
+      const err = repasField.querySelector(".form-error");
+      err.textContent = "Veuillez saisir au moins un repas employé avec un nom et un choix (Tacos ou Finger Food).";
+      repasField.scrollIntoView({behavior:'smooth', block:'center'});
+    } else {
+      repasField.classList.remove("error");
+    }
+  }, true);
+});
+</script>
+  <script>
+document.addEventListener("DOMContentLoaded", function() {
+  const pertesInput = document.getElementById("nombrePertesConception");
+  const detailField = document.getElementById("detailPertesConception");
+  const detailTextarea = document.getElementById("detailsPertesConception");
+
+  // 🧮 Afficher ou masquer le champ selon la valeur
+  pertesInput.addEventListener("input", function() {
+    const value = parseInt(pertesInput.value, 10);
+    if (!isNaN(value) && value > 0) {
+      detailField.style.display = "block";
+      detailTextarea.setAttribute("required", "required");
+    } else {
+      detailField.style.display = "none";
+      detailTextarea.removeAttribute("required");
+      detailTextarea.value = "";
+    }
+  });
+});
+</script>
 </body>
 </html>
