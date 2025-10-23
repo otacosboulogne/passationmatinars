@@ -829,30 +829,34 @@ async function makePdfBlob(page) {
   return await html2pdf().set(opt).from(page).output("blob");
 }
 </script>
-  // 💬 Message d’erreur / succès
-  function showMessage(text, type, withRetry) {
-    const c = document.getElementById("formMessageContainer");
-    if (!c) return;
-    c.innerHTML = "";
-    const m = document.createElement("div");
-    m.className = "form-message " + (type === "success" ? "success" : "error");
-    m.textContent = text;
-    if (withRetry) {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "retry";
-      b.textContent = "Réessayer";
-      b.onclick = () => {
-        const submitBtn =
-          document.querySelector(".submitbar button[type='submit']") ||
-          document.querySelector("button[type='submit']");
-        submitBtn?.click();
-      };
-      m.appendChild(b);
-    }
-    c.appendChild(m);
+ <!-- (TAIL) utilitaires + fin de page -->
+<script>
+// 💬 Message d’erreur / succès
+function showMessage(text, type, withRetry) {
+  const c = document.getElementById("formMessageContainer");
+  if (!c) return;
+  c.innerHTML = "";
+
+  const m = document.createElement("div");
+  m.className = "form-message " + (type === "success" ? "success" : "error");
+  m.textContent = text;
+
+  if (withRetry) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "retry";
+    b.textContent = "Réessayer";
+    b.onclick = () => {
+      const submitBtn =
+        document.querySelector(".submitbar button[type='submit']") ||
+        document.querySelector("button[type='submit']");
+      submitBtn?.click();
+    };
+    m.appendChild(b);
   }
-});
+
+  c.appendChild(m);
+}
 </script>
 <!-- ✅ Gestion du tableau des repas -->
 <!-- Scripts de la page -->
