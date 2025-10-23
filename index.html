@@ -653,56 +653,68 @@
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.min.js"></script>
 
-  <!-- Envoi -->
-<!-- Envoi -->
- <!-- ✅ Envoi du formulaire -->
+<!-- ✅ Envoi du formulaire (version robuste) -->
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-  const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz9HRK0glIiN6DJupasx6meANOqPAAJ5A-NEYUeWRjgHiFBKJ7Pf_cwka5reQ-V7mzl/exec';
+document.addEventListener("DOMContentLoaded", () => {
+  const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbz9HRK0glIiN6DJupasx6meANOqPAAJ5A-NEYUeWRjgHiFBKJ7Pf_cwka5reQ-V7mzl/exec";
   const form = document.getElementById("passationForm");
-  if (!form) return console.error("⚠️ Formulaire introuvable !");
-  
-  const btn = form.querySelector('button[type="submit"]');
-  if (!btn) return console.error("⚠️ Bouton Envoyer introuvable !");
-  
+  if (!form) { console.error("⚠️ Formulaire introuvable !"); return; }
+
   let formAlreadySent = false;
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (formAlreadySent) return;
 
-    // 🔒 Désactive le bouton pendant l’envoi
-    btn.disabled = true;
-    btn.textContent = "⏳ Envoi en cours...";
-    btn.style.opacity = "0.6";
-    btn.style.cursor = "not-allowed";
+    // 🔎 Récupère le bouton **au moment du submit**
+    // - e.submitter : bouton réellement cliqué (standard)
+    // - fallbacks : si submit par la touche Entrée ou si structure différente
+    const btn =
+      e.submitter ||
+      form.querySelector('button[type="submit"], input[type="submit"]') ||
+      document.querySelector(".submitbar button[type='submit']");
+
+    // Récupère la barre d’envoi si présente (sécurisé)
+    const submitbar = document.querySelector(".submitbar");
 
     const meta = {
-      date: form.date.value,
-      heure: form.heure.value,
-      responsable: (form.respUnique?.value || form.responsable?.value || '').trim(),
-      ruptures: (form.ruptures?.value || '').trim()
+      date: form.date?.value || "",
+      heure: form.heure?.value || "",
+      responsable: (form.respUnique?.value || form.responsable?.value || "").trim(),
+      ruptures: (form.ruptures?.value || "").trim(),
     };
 
-    // 🔒 Empêcher double envoi le même jour + même responsable
+    // 🔒 Empêcher double envoi (même jour + même responsable)
     const key = `passation-${meta.date}-${meta.responsable.toLowerCase()}`;
     if (localStorage.getItem(key)) {
       alert("⚠️ Une checklist a déjà été envoyée aujourd’hui par ce responsable.");
-      btn.disabled = false;
-      btn.textContent = "Checklist déjà envoyée";
-      btn.style.opacity = "1";
-      btn.style.cursor = "pointer";
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Checklist déjà envoyée";
+        btn.style.opacity = "1";
+        btn.style.cursor = "pointer";
+      }
       return;
     }
 
+    // 🔒 Désactive le bouton pendant l’envoi (si trouvé)
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "⏳ Envoi en cours...";
+      btn.style.opacity = "0.6";
+      btn.style.cursor = "not-allowed";
+    } else {
+      console.warn("⚠️ Bouton Envoyer introuvable – on continue sans animation du bouton.");
+    }
+
+    // Masque la barre d’envoi pour le rendu PDF si présente
     const page = document.querySelector(".page");
-    const submitbar = document.querySelector(".submitbar");
-    const prevDisplay = submitbar.style.display;
-    submitbar.style.display = "none";
+    const prevDisplay = submitbar ? submitbar.style.display : "";
+    if (submitbar) submitbar.style.display = "none";
 
     try {
       const pdfBlob = await makePdfBlob(page);
-      submitbar.style.display = prevDisplay;
+      if (submitbar) submitbar.style.display = prevDisplay;
 
       const b64 = await blobToBase64(pdfBlob);
       const body = new URLSearchParams({ data: JSON.stringify({ b64, meta }) });
@@ -717,29 +729,34 @@ document.addEventListener("DOMContentLoaded", function() {
       // ✅ Succès
       formAlreadySent = true;
       localStorage.setItem(key, "1");
-
-      btn.textContent = "✅ Checklist envoyée";
-      btn.style.background = "#2e7d32";
-      btn.style.opacity = "1";
-      btn.style.cursor = "not-allowed";
+      if (btn) {
+        btn.textContent = "✅ Checklist envoyée";
+        btn.style.background = "#2e7d32";
+        btn.style.opacity = "1";
+        btn.style.cursor = "not-allowed";
+      }
 
       const title = document.getElementById("successTitle");
       const details = document.getElementById("successDetails");
-      title.textContent = `Merci ${meta.responsable || ''} !`;
-      details.textContent = "La passation a bien été enregistrée.";
-      document.getElementById("successOverlay").classList.remove("hidden");
+      if (title) title.textContent = `Merci ${meta.responsable || ""} !`;
+      if (details) details.textContent = "La passation a bien été enregistrée.";
+      const overlay = document.getElementById("successOverlay");
+      if (overlay) overlay.classList.remove("hidden");
 
     } catch (err) {
       console.error(err);
       showMessage("❌ Échec de l’envoi : " + err.message, "error", true);
-      btn.disabled = false;
-      btn.textContent = "Réessayer l’envoi";
-      btn.style.opacity = "1";
-      btn.style.cursor = "pointer";
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Réessayer l’envoi";
+        btn.style.opacity = "1";
+        btn.style.cursor = "pointer";
+      }
+      if (submitbar) submitbar.style.display = prevDisplay;
     }
   });
 
-  // 🔄 Convertir le PDF en base64
+  // 🔄 Convertit le PDF en base64
   function blobToBase64(blob) {
     return new Promise((resolve) => {
       const r = new FileReader();
@@ -754,7 +771,7 @@ document.addEventListener("DOMContentLoaded", function() {
       margin: [5, 10, 10, 10],
       html2canvas: { scale: 2, scrollY: 0 },
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      pagebreak: { mode: ["avoid-all", "css", "legacy"] }
+      pagebreak: { mode: ["avoid-all", "css", "legacy"] },
     };
     return await html2pdf().set(opt).from(page).output("blob");
   }
@@ -762,6 +779,7 @@ document.addEventListener("DOMContentLoaded", function() {
   // 💬 Message d’erreur / succès
   function showMessage(text, type, withRetry) {
     const c = document.getElementById("formMessageContainer");
+    if (!c) return;
     c.innerHTML = "";
     const m = document.createElement("div");
     m.className = "form-message " + (type === "success" ? "success" : "error");
@@ -771,14 +789,18 @@ document.addEventListener("DOMContentLoaded", function() {
       b.type = "button";
       b.className = "retry";
       b.textContent = "Réessayer";
-      b.onclick = () => btn.click();
+      b.onclick = () => {
+        const submitBtn =
+          document.querySelector(".submitbar button[type='submit']") ||
+          document.querySelector("button[type='submit']");
+        submitBtn?.click();
+      };
       m.appendChild(b);
     }
     c.appendChild(m);
   }
 });
 </script>
-
 <!-- ✅ Gestion du tableau des repas -->
 <!-- Scripts de la page -->
 <script>
