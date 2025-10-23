@@ -718,28 +718,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const b64 = await blobToBase64(pdfBlob);
       const body = new URLSearchParams({ data: JSON.stringify({ b64, meta }) });
+    
+  // ---- ENVOI AU WEBAPP + PARSE ROBUSTE ----
+const res = await fetch(WEBAPP_URL, { method: "POST", body });
 
-     const res = await fetch(WEBAPP_URL, { method: "POST", body });
-
-// On lit toujours en texte d'abord
+// Lis toujours en texte (jamais res.json() direct)
 const txt = await res.text();
 
-// Si HTTP pas OK -> on remonte un extrait lisible
+// Petit utilitaire pour un extrait lisible
+const head = (s, n = 180) => (s || "").replace(/\s+/g, " ").slice(0, n);
+
+// Si HTTP non-OK -> message exploitable
 if (!res.ok) {
-  throw new Error(`HTTP ${res.status} ${res.statusText} – ${txt.slice(0, 140)}…`);
+  throw new Error(`HTTP ${res.status} ${res.statusText} — ${head(txt)}…`);
 }
 
-// On tente le JSON, sinon on explique clairement que c'est de l'HTML
+// Si la réponse commence par '<' ⇒ c'est de l'HTML (login/erreur GAS)
+const trimmed = txt.trimStart();
+if (trimmed.startsWith("<")) {
+  // Log complet dans la console pour debug
+  console.error("Réponse HTML du serveur:", txt);
+  throw new Error(`Réponse HTML au lieu de JSON (extrait) : ${head(txt)}…`);
+}
+
+// Tente le JSON; si ça casse, message clair
 let json;
 try {
-  json = JSON.parse(txt);
-} catch {
-  throw new Error(`Réponse non-JSON du serveur (extrait) : ${txt.slice(0, 140)}…`);
+  json = JSON.parse(trimmed);
+} catch (e) {
+  console.error("Réponse brute:", txt);
+  throw new Error(`Réponse non-JSON du serveur (extrait) : ${head(txt)}…`);
 }
 
-// On valide le contrat minimal
+// Contrat minimal attendu
 if (!json || json.status !== "ok") {
-  throw new Error(json?.message || "Réponse JSON invalide (status≠ok)");
+  throw new Error(json?.message || "Réponse JSON invalide (status ≠ 'ok')");
 }
       // ✅ Succès
       formAlreadySent = true;
