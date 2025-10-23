@@ -784,7 +784,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // 📄 PDF avec couleurs sRGB (sans fonctions CSS modernes)
-  <script>
 // 📄 PDF avec couleurs conservées + neutralisation ciblée des color() / oklch / lab / lch
                           
 async function makePdfBlob(page) {
@@ -869,7 +868,6 @@ async function makePdfBlob(page) {
 
   return await html2pdf().set(opt).from(page).output("blob");
 }
-</script>
 
   // 💬 Message d’erreur / succès
   function showMessage(text, type, withRetry) {
