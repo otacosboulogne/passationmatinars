@@ -658,42 +658,50 @@
 
   <!-- Envoi -->
 <!-- Envoi -->
-<script>
+  <script>
 document.addEventListener("DOMContentLoaded", function() {
   const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz9HRK0glIiN6DJupasx6meANOqPAAJ5A-NEYUeWRjgHiFBKJ7Pf_cwka5reQ-V7mzl/exec';
   const form = document.getElementById("passationForm");
+  if (!form) {
+    console.error("⚠️ Formulaire introuvable !");
+    return;
+  }
+
   const btn = form.querySelector('button[type="submit"]');
+  if (!btn) {
+    console.error("⚠️ Bouton Envoyer introuvable !");
+    return;
+  }
+
   let formAlreadySent = false;
 
-    form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  if (formAlreadySent) return;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (formAlreadySent) return;
 
-  // 🔒 Désactive le bouton pendant l'envoi
-  btn.disabled = true;
-  btn.textContent = "⏳ Envoi en cours...";
-  btn.style.opacity = "0.6";
-  btn.style.cursor = "not-allowed";
+    // 🔒 Désactive le bouton pendant l’envoi
+    btn.disabled = true;
+    btn.textContent = "⏳ Envoi en cours...";
+    btn.style.opacity = "0.6";
+    btn.style.cursor = "not-allowed";
 
-  const meta = {
-    date: form.date.value,
-    heure: form.heure.value,
-    responsable: (form.respUnique?.value || form.responsable?.value || '').trim(),
-    ruptures: (form.ruptures?.value || '').trim()
-  };
+    const meta = {
+      date: form.date.value,
+      heure: form.heure.value,
+      responsable: (form.respUnique?.value || form.responsable?.value || '').trim(),
+      ruptures: (form.ruptures?.value || '').trim()
+    };
 
     // 🔒 Empêcher double envoi le même jour + même responsable
     const key = `passation-${meta.date}-${meta.responsable.toLowerCase()}`;
     if (localStorage.getItem(key)) {
       alert("⚠️ Une checklist a déjà été envoyée aujourd’hui par ce responsable.");
+      btn.disabled = false;
+      btn.textContent = "Checklist déjà envoyée";
+      btn.style.opacity = "1";
+      btn.style.cursor = "pointer";
       return;
     }
-
-    // Désactiver le bouton pendant l’envoi
-    btn.disabled = true;
-    btn.textContent = "⏳ Envoi en cours...";
-    btn.style.opacity = "0.6";
-    btn.style.cursor = "not-allowed";
 
     const page = document.querySelector(".page");
     const submitbar = document.querySelector(".submitbar");
@@ -720,6 +728,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
       btn.textContent = "✅ Checklist envoyée";
       btn.style.background = "#2e7d32";
+      btn.style.opacity = "1";
+      btn.style.cursor = "not-allowed";
 
       const title = document.getElementById("successTitle");
       const details = document.getElementById("successDetails");
@@ -737,6 +747,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
+  // 🔄 Convertir le PDF en base64
   function blobToBase64(blob) {
     return new Promise((resolve) => {
       const r = new FileReader();
@@ -745,15 +756,18 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
+  // 📄 Génération du PDF sans couper les tableaux
   async function makePdfBlob(page) {
     const opt = {
       margin: [5, 10, 10, 10],
       html2canvas: { scale: 2, scrollY: 0 },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      pagebreak: { mode: ["avoid-all", "css", "legacy"] }
     };
     return await html2pdf().set(opt).from(page).output("blob");
   }
 
+  // 💬 Message d’erreur / succès
   function showMessage(text, type, withRetry) {
     const c = document.getElementById("formMessageContainer");
     c.innerHTML = "";
@@ -772,7 +786,7 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 });
 </script>
-  <script>
+  
 document.addEventListener("DOMContentLoaded", function() {
   const repasBody = document.getElementById("repas-body");
   const addBtn = document.getElementById("add-repas");
