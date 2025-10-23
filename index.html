@@ -658,21 +658,16 @@
 
   <!-- Envoi -->
 <!-- Envoi -->
-  <script>
+ <!-- ✅ Envoi du formulaire -->
+<script>
 document.addEventListener("DOMContentLoaded", function() {
   const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz9HRK0glIiN6DJupasx6meANOqPAAJ5A-NEYUeWRjgHiFBKJ7Pf_cwka5reQ-V7mzl/exec';
   const form = document.getElementById("passationForm");
-  if (!form) {
-    console.error("⚠️ Formulaire introuvable !");
-    return;
-  }
-
+  if (!form) return console.error("⚠️ Formulaire introuvable !");
+  
   const btn = form.querySelector('button[type="submit"]');
-  if (!btn) {
-    console.error("⚠️ Bouton Envoyer introuvable !");
-    return;
-  }
-
+  if (!btn) return console.error("⚠️ Bouton Envoyer introuvable !");
+  
   let formAlreadySent = false;
 
   form.addEventListener("submit", async (e) => {
@@ -779,21 +774,25 @@ document.addEventListener("DOMContentLoaded", function() {
       b.type = "button";
       b.className = "retry";
       b.textContent = "Réessayer";
-      b.onclick = () => document.querySelector("#passationForm button[type='submit']").click();
+      b.onclick = () => btn.click();
       m.appendChild(b);
     }
     c.appendChild(m);
   }
 });
 </script>
-  
+
+<!-- ✅ Gestion du tableau des repas -->
+<script>
 document.addEventListener("DOMContentLoaded", function() {
   const repasBody = document.getElementById("repas-body");
   const addBtn = document.getElementById("add-repas");
   const repasField = document.getElementById("repas-employes");
   let count = 1;
 
-  // ➕ Ajouter une nouvelle ligne
+  if (!repasBody || !addBtn) return;
+
+  // ➕ Ajouter une seule ligne à chaque clic
   addBtn.addEventListener("click", function() {
     count++;
     const row = document.createElement("tr");
@@ -810,7 +809,6 @@ document.addEventListener("DOMContentLoaded", function() {
   repasBody.addEventListener("click", function(e) {
     if (e.target.classList.contains("remove-row")) {
       const row = e.target.closest("tr");
-      // Empêche de supprimer la dernière ligne restante
       if (repasBody.querySelectorAll("tr").length > 1) {
         row.remove();
       } else {
@@ -819,7 +817,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // 🔍 Validation repas : au moins une ligne avec un repas coché
+  // ✅ Validation avant envoi
   const form = document.getElementById("passationForm");
   form.addEventListener("submit", function(e) {
     const rows = repasBody.querySelectorAll("tr");
@@ -846,7 +844,7 @@ document.addEventListener("DOMContentLoaded", function() {
   }, true);
 });
 </script>
-<script>
+  
 document.addEventListener("DOMContentLoaded", function() {
   const pertesInput = document.getElementById("nombrePertesConception");
   const detailField = document.getElementById("detailPertesConception");
