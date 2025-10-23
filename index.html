@@ -279,11 +279,8 @@
           <h2>Informations importantes</h2>
           <div class="flex">
               <label for="nombrePertesConception">Nombre de pertes de conception en cuisine durant ton service</label>
-              <input id="nombrePertesConception" name="nombrePertesConception" type="number" inputmode="numeric" min="0" step="1" placeholder="0" / required>
-              <div id="detailPertesConception" class="field" style="display:none;">
-  <label for="detailsPertesConception">Détail des pertes de conception</label>
-  <textarea id="detailsPertesConception" name="detailsPertesConception" placeholder="Précisez les produits ou erreurs..."></textarea>
-</div>
+<input id="nombrePertesConception" name="nombrePertesConception"
+       type="number" inputmode="numeric" min="0" step="1" placeholder="0" required />
               <div id="detailPertesConception" class="field" style="display:none;">
   <label for="detailsPertesConception">Détail des pertes de conception</label>
   <textarea id="detailsPertesConception" name="detailsPertesConception" placeholder="Précisez les produits ou erreurs..."></textarea>
@@ -501,7 +498,7 @@
       ])],
       ["Chambre froide et frigos", new Set([
         "Décongélations préparées",
-        "Produits remontés / rotation faite"
+        "Produits remontés / rotation faite Ch- et frigos"
       ])],
       ["Comptoir", new Set([
         "Frigos à boissons remplis",
@@ -783,75 +780,77 @@ document.addEventListener("DOMContentLoaded", function() {
 </script>
 
 <!-- ✅ Gestion du tableau des repas -->
+<!-- Scripts de la page -->
 <script>
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", () => {
+  // ====== Repas employés (ajout/suppression + validation) ======
+  const form = document.getElementById("passationForm");
   const repasBody = document.getElementById("repas-body");
   const addBtn = document.getElementById("add-repas");
   const repasField = document.getElementById("repas-employes");
-  let count = 1;
 
-  if (!repasBody || !addBtn) return;
+  // si une ligne existe déjà, on part de cette quantité
+  let count = repasBody ? Math.max(1, repasBody.querySelectorAll("tr").length) : 1;
 
-  // ➕ Ajouter une seule ligne à chaque clic
-  addBtn.addEventListener("click", function() {
-    count++;
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td><input type="text" name="employe_nom_${count}" placeholder="Nom et prénom" aria-label="Nom du salarié ${count}"></td>
-      <td class="center"><input type="radio" name="employe_${count}_repas" value="tacos"></td>
-      <td class="center"><input type="radio" name="employe_${count}_repas" value="finger"></td>
-      <td class="center"><button type="button" class="remove-row" style="background:#c62828;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">🗑️</button></td>
-    `;
-    repasBody.appendChild(row);
-  });
+  if (repasBody && addBtn) {
+    addBtn.addEventListener("click", () => {
+      count++;
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td><input type="text" name="employe_nom_${count}" placeholder="Nom et prénom" aria-label="Nom du salarié ${count}"></td>
+        <td class="center"><input type="radio" name="employe_${count}_repas" value="tacos"></td>
+        <td class="center"><input type="radio" name="employe_${count}_repas" value="finger"></td>
+        <td class="center"><button type="button" class="remove-row" style="background:#c62828;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">🗑️</button></td>
+      `;
+      repasBody.appendChild(row);
+    });
 
-  // 🗑️ Supprimer une ligne
-  repasBody.addEventListener("click", function(e) {
-    if (e.target.classList.contains("remove-row")) {
-      const row = e.target.closest("tr");
-      if (repasBody.querySelectorAll("tr").length > 1) {
-        row.remove();
+    repasBody.addEventListener("click", (e) => {
+      if (e.target.classList.contains("remove-row")) {
+        const row = e.target.closest("tr");
+        if (repasBody.querySelectorAll("tr").length > 1) {
+          row.remove();
+        } else {
+          alert("Il doit rester au moins une ligne !");
+        }
+      }
+    });
+  }
+
+  if (form && repasBody && repasField) {
+    form.addEventListener("submit", (e) => {
+      const rows = repasBody.querySelectorAll("tr");
+      let valid = false;
+
+      for (const row of rows) {
+        const nom = row.querySelector('input[type="text"]')?.value.trim() || "";
+        const checked = row.querySelector('input[type="radio"]:checked');
+        if (nom !== "" && checked) {
+          valid = true;
+          break;
+        }
+      }
+
+      if (!valid) {
+        e.preventDefault();
+        repasField.classList.add("error");
+        const err = repasField.querySelector(".form-error");
+        if (err) {
+          err.textContent = "Veuillez saisir au moins un repas employé avec un nom et un choix (Tacos ou Finger Food).";
+        }
+        repasField.scrollIntoView({ behavior: "smooth", block: "center" });
       } else {
-        alert("Il doit rester au moins une ligne !");
+        repasField.classList.remove("error");
       }
-    }
-  });
+    }, true);
+  }
 
-  // ✅ Validation avant envoi
-  const form = document.getElementById("passationForm");
-  form.addEventListener("submit", function(e) {
-    const rows = repasBody.querySelectorAll("tr");
-    let valid = false;
-
-    for (let row of rows) {
-      const nom = row.querySelector('input[type="text"]').value.trim();
-      const checked = row.querySelector('input[type="radio"]:checked');
-      if (nom !== "" && checked) {
-        valid = true;
-        break;
-      }
-    }
-
-    if (!valid) {
-      e.preventDefault();
-      repasField.classList.add("error");
-      const err = repasField.querySelector(".form-error");
-      err.textContent = "Veuillez saisir au moins un repas employé avec un nom et un choix (Tacos ou Finger Food).";
-      repasField.scrollIntoView({behavior:'smooth', block:'center'});
-    } else {
-      repasField.classList.remove("error");
-    }
-  }, true);
-});
-</script>
-  
-document.addEventListener("DOMContentLoaded", function() {
+  // ====== Pertes de conception (afficher/masquer le détail) ======
   const pertesInput = document.getElementById("nombrePertesConception");
   const detailField = document.getElementById("detailPertesConception");
   const detailTextarea = document.getElementById("detailsPertesConception");
 
-  // 🧮 Afficher ou masquer le champ selon la valeur
-  pertesInput.addEventListener("input", function() {
+  const syncPertes = () => {
     const value = parseInt(pertesInput.value, 10);
     if (!isNaN(value) && value > 0) {
       detailField.style.display = "block";
@@ -861,7 +860,12 @@ document.addEventListener("DOMContentLoaded", function() {
       detailTextarea.removeAttribute("required");
       detailTextarea.value = "";
     }
-  });
+  };
+
+  if (pertesInput && detailField && detailTextarea) {
+    pertesInput.addEventListener("input", syncPertes);
+    syncPertes(); // état correct dès le chargement
+  }
 });
 </script>
 </body>
