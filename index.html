@@ -661,16 +661,22 @@ document.addEventListener("DOMContentLoaded", function() {
   const btn = form.querySelector('button[type="submit"]');
   let formAlreadySent = false;
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (formAlreadySent) return;
+    form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (formAlreadySent) return;
 
-    const meta = {
-      date: form.date.value,
-      heure: form.heure.value,
-      responsable: (form.respUnique?.value || form.responsable?.value || '').trim(),
-      ruptures: (form.ruptures?.value || '').trim()
-    };
+  // 🔒 Désactive le bouton pendant l'envoi
+  btn.disabled = true;
+  btn.textContent = "⏳ Envoi en cours...";
+  btn.style.opacity = "0.6";
+  btn.style.cursor = "not-allowed";
+
+  const meta = {
+    date: form.date.value,
+    heure: form.heure.value,
+    responsable: (form.respUnique?.value || form.responsable?.value || '').trim(),
+    ruptures: (form.ruptures?.value || '').trim()
+  };
 
     // 🔒 Empêcher double envoi le même jour + même responsable
     const key = `passation-${meta.date}-${meta.responsable.toLowerCase()}`;
