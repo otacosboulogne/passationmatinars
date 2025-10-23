@@ -719,13 +719,28 @@ document.addEventListener("DOMContentLoaded", () => {
       const b64 = await blobToBase64(pdfBlob);
       const body = new URLSearchParams({ data: JSON.stringify({ b64, meta }) });
 
-      const res = await fetch(WEBAPP_URL, { method: "POST", body });
-      const txt = await res.text();
-      if (!res.ok) throw new Error("HTTP " + res.status + " : " + txt);
+     const res = await fetch(WEBAPP_URL, { method: "POST", body });
 
-      const json = JSON.parse(txt);
-      if (json.status !== "ok") throw new Error(json.message || "Erreur serveur");
+// On lit toujours en texte d'abord
+const txt = await res.text();
 
+// Si HTTP pas OK -> on remonte un extrait lisible
+if (!res.ok) {
+  throw new Error(`HTTP ${res.status} ${res.statusText} – ${txt.slice(0, 140)}…`);
+}
+
+// On tente le JSON, sinon on explique clairement que c'est de l'HTML
+let json;
+try {
+  json = JSON.parse(txt);
+} catch {
+  throw new Error(`Réponse non-JSON du serveur (extrait) : ${txt.slice(0, 140)}…`);
+}
+
+// On valide le contrat minimal
+if (!json || json.status !== "ok") {
+  throw new Error(json?.message || "Réponse JSON invalide (status≠ok)");
+}
       // ✅ Succès
       formAlreadySent = true;
       localStorage.setItem(key, "1");
