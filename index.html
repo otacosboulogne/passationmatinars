@@ -765,17 +765,70 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 📄 Génération du PDF sans couper les tableaux
-  async function makePdfBlob(page) {
-    const opt = {
-      margin: [5, 10, 10, 10],
-      html2canvas: { scale: 2, scrollY: 0 },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      pagebreak: { mode: ["avoid-all", "css", "legacy"] },
-    };
-    return await html2pdf().set(opt).from(page).output("blob");
-  }
+// 📄 Génération du PDF sans erreurs de couleurs CSS modernes
+async function makePdfBlob(page) {
+  const opt = {
+    margin: [5, 10, 10, 10],
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    html2canvas: {
+      scale: 2,
+      scrollY: 0,
+      // 👇 on travaille sur le document CLONÉ par html2canvas
+      onclone: (clonedDoc) => {
+        // 1) Masquer les éléments d’UI non nécessaires si pas déjà fait
+        const sb = clonedDoc.querySelector(".submitbar");
+        if (sb) sb.style.display = "none";
 
+        // 2) Injection d’un stylesheet “safe colors”
+        const style = clonedDoc.createElement("style");
+        style.id = "h2c-safe-colors";
+        style.textContent = `
+          /* Neutraliser les fonctions couleur non supportées */
+          .page, .page * {
+            background-image: none !important;
+            text-shadow: none !important;
+            box-shadow: none !important;
+          }
+
+          /* Forcer des couleurs sRGB simples (noir/gris) */
+          .page, .page * {
+            color: #111 !important;
+            border-color: #222 !important;
+          }
+
+          /* Fond blanc pour les cartes/sections afin d'éviter le transparent */
+          .page, .section, .card, .field, .container {
+            background: #ffffff !important;
+          }
+
+          /* Boutons : fond gris neutre et lisible */
+          button, .btn, input[type="submit"] {
+            background: #e0e0e0 !important;
+            color: #111 !important;
+            border: 1px solid #bbb !important;
+          }
+
+          /* Éviter les dégradés ou couleurs via variables exotiques */
+          * {
+            background: var(--h2c-bg, inherit) !important;
+          }
+        `;
+        clonedDoc.head.appendChild(style);
+
+        // 3) Dernier filet de sécurité : si des gradients restent, couper
+        clonedDoc.querySelectorAll("*").forEach((el) => {
+          const s = clonedDoc.defaultView.getComputedStyle(el);
+          if (s.backgroundImage && s.backgroundImage !== "none") {
+            el.style.backgroundImage = "none";
+          }
+        });
+      },
+    },
+    pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+  };
+
+  return await html2pdf().set(opt).from(page).output("blob");
+}
   // 💬 Message d’erreur / succès
   function showMessage(text, type, withRetry) {
     const c = document.getElementById("formMessageContainer");
