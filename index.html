@@ -652,7 +652,8 @@
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.min.js"></script>
-<!-- ✅ Envoi du formulaire (version robuste) -->
+
+  <!-- ✅ Envoi du formulaire (version robuste) -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyCnPWiwiROxnPS_CbFjuL6PxW-nYATmBtcSI4LrYEur_BD8RmTC7Ua4pTjESdO92O7/exec";
@@ -783,59 +784,92 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // 📄 PDF avec couleurs sRGB (sans fonctions CSS modernes)
-  async function makePdfBlob(page) {
-    const opt = {
-      margin: [5, 10, 10, 10],
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      html2canvas: {
-        scale: 2,
-        scrollY: 0,
-        onclone: (clonedDoc) => {
-          const sb = clonedDoc.querySelector(".submitbar");
-          if (sb) sb.style.display = "none";
+  <script>
+// 📄 PDF avec couleurs conservées + neutralisation ciblée des color() / oklch / lab / lch
+                          
+async function makePdfBlob(page) {
+  const opt = {
+    margin: [5, 10, 10, 10],
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    html2canvas: {
+      scale: 2,
+      scrollY: 0,
+      onclone: (clonedDoc) => {
+        const sb = clonedDoc.querySelector(".submitbar");
+        if (sb) sb.style.display = "none";
 
-          const style = clonedDoc.createElement("style");
-          style.id = "h2c-safe-min";
-          style.textContent = `
-            * { text-shadow: none !important; box-shadow: none !important; }
-            * { background-image: none !important; } /* évite color()/oklch()/color-mix() */
+        // 1) Style de base sRGB (garde ta palette verte/rouge)
+        const style = clonedDoc.createElement("style");
+        style.id = "h2c-safe-min";
+        style.textContent = `
+          * { text-shadow: none !important; box-shadow: none !important; }
+          * { background-image: none !important; } /* coupe les gradients et color-mix() */
 
-            .page { background: #ffffff !important; }
-            .section, .card, fieldset {
-              background: #eef8ee !important;
-              border: 2px solid #2e7d32 !important;
-            }
-            .field { border-color: #2e7d32 !important; }
-            .form-error, .error { color: #c62828 !important; }
-            .success { color: #2e7d32 !important; }
+          .page { background: #ffffff !important; }
+          .section, .card, fieldset {
+            background: #eef8ee !important;          /* vert clair */
+            border: 2px solid #2e7d32 !important;    /* vert */
+          }
+          .field { border-color: #2e7d32 !important; }
+          .form-error, .error { color: #c62828 !important; }  /* rouge erreurs */
+          .success { color: #2e7d32 !important; }              /* vert succès */
 
-            .submitbar button[type="submit"],
-            button[type="submit"],
-            input[type="submit"] {
-              background: #2e7d32 !important;
-              color: #ffffff !important;
-              border: 1px solid #1b5e20 !important;
-            }
+          /* Titres (évite color() appliqué via variables globales) */
+          h1, h2, h3, h4, h5, h6 { color: #1b5e20 !important; }
 
-            table, th, td, input, textarea, select {
-              border-color: #9e9e9e !important;
-            }
-          `;
-          clonedDoc.head.appendChild(style);
+          .submitbar button[type="submit"],
+          button[type="submit"],
+          input[type="submit"] {
+            background: #2e7d32 !important;
+            color: #ffffff !important;
+            border: 1px solid #1b5e20 !important;
+          }
 
-          clonedDoc.querySelectorAll("*").forEach((el) => {
-            const s = clonedDoc.defaultView.getComputedStyle(el);
-            if (s.backgroundImage && s.backgroundImage !== "none") {
-              el.style.backgroundImage = "none";
+          table, th, td, input, textarea, select { border-color: #9e9e9e !important; }
+        `;
+        clonedDoc.head.appendChild(style);
+
+        // 2) Si des backgrounds image restent (cas exotiques), on coupe
+        clonedDoc.querySelectorAll("*").forEach((el) => {
+          const s = clonedDoc.defaultView.getComputedStyle(el);
+          if (s.backgroundImage && s.backgroundImage !== "none") {
+            el.style.backgroundImage = "none";
+          }
+        });
+
+        // 3) Sécurité CIBLEE : si une couleur "moderne" est détectée, on la remplace
+        const usesUnsupportedColor = (val) => {
+          if (!val) return false;
+          const v = String(val);
+          // html2canvas n'aime pas color(), oklch(), lab(), lch()
+          return v.includes("color(") || v.includes("okl") || v.includes("lab(") || v.includes("lch(");
+        };
+
+        clonedDoc.querySelectorAll("*").forEach((el) => {
+          const cs = clonedDoc.defaultView.getComputedStyle(el);
+
+          if (usesUnsupportedColor(cs.color)) {
+            el.style.color = "#111111"; // texte lisible
+          }
+          if (usesUnsupportedColor(cs.backgroundColor)) {
+            el.style.backgroundColor = "#ffffff"; // fond blanc safe
+          }
+          // Bordures / outline
+          const borderProps = ["borderTopColor","borderRightColor","borderBottomColor","borderLeftColor","outlineColor"];
+          borderProps.forEach((p) => {
+            if (usesUnsupportedColor(cs[p])) {
+              el.style[p] = "#9e9e9e";
             }
           });
-        },
+        });
       },
-      pagebreak: { mode: ["avoid-all", "css", "legacy"] },
-    };
+    },
+    pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+  };
 
-    return await html2pdf().set(opt).from(page).output("blob");
-  }
+  return await html2pdf().set(opt).from(page).output("blob");
+}
+</script>
 
   // 💬 Message d’erreur / succès
   function showMessage(text, type, withRetry) {
